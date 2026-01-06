@@ -1,13 +1,14 @@
 :root{
-  --bg:#0b1020;
-  --card:#111a33;
-  --card2:#0f1730;
-  --text:#e9ecf5;
-  --muted:#aab2cf;
-  --border:rgba(255,255,255,.08);
-  --accent:#6ea8ff;
-  --accent2:#7cffa6;
-  --shadow: 0 12px 30px rgba(0,0,0,.35);
+  /* Light theme (White / Black / DSS Red) */
+  --bg:#ffffff;                       /* page background */
+  --card:#ffffff;                     /* cards */
+  --card2:#fafafa;                    /* subtle alt surface */
+  --text:#111111;                     /* main text */
+  --muted:#5f5f5f;                    /* muted text */
+  --border:rgba(225,6,0,.55);         /* DSS red borders */
+  --accent:#e10600;                   /* DSS red */
+  --accent2:#111111;                  /* secondary accent = black */
+  --shadow: 0 12px 30px rgba(0,0,0,.12);
 }
 
 *{box-sizing:border-box}
@@ -29,8 +30,8 @@ body::before{
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(110,168,255,.25), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(124,255,166,.16), transparent 55%);
+    radial-gradient(1200px 600px at 20% -10%, rgba(225,6,0,.08), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(0,0,0,.05), transparent 55%);
 }
 
 
@@ -38,21 +39,33 @@ body::before{
 
 .topbar{
   position:sticky; top:0; z-index:10;
-  background: rgba(11,16,32,.7);
+  background: rgba(255,255,255,.86);
   backdrop-filter: blur(10px);
   border-bottom:1px solid var(--border);
   display:flex; align-items:center; justify-content:space-between;
   padding:14px 22px;
 }
-
 .brand{display:flex;gap:12px;align-items:center}
 .logo{
-  width:42px;height:42px;border-radius:12px;
-  display:grid;place-items:center;
-  background: linear-gradient(145deg, rgba(110,168,255,.35), rgba(124,255,166,.18));
-  border:1px solid var(--border);
-  font-weight:800;
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:#fff;                 /* clean white behind the PNG */
+  border:1px solid rgba(225,6,0,.55);
+  overflow:hidden;                 /* IMPORTANT: crops the glow */
 }
+.logo-img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit: cover;               /* fills the box */
+  border-radius:12px;              /* matches container */
+  /* optional: makes it look sharper at small size */
+  image-rendering: auto;
+}
+
 .brand-text h1{margin:0;font-size:18px;letter-spacing:.3px}
 .brand-text p{margin:2px 0 0;color:var(--muted);font-size:12px}
 
@@ -60,8 +73,13 @@ body::before{
 .nav a{
   color:var(--muted); text-decoration:none; font-size:14px;
   padding:8px 10px; border-radius:10px;
+  border:1px solid transparent;
 }
-.nav a:hover{color:var(--text); background: rgba(255,255,255,.06)}
+.nav a:hover{
+  color:var(--text);
+  background: rgba(225,6,0,.06);
+  border-color: rgba(225,6,0,.25);
+}
 
 .hero{
   display:grid;
@@ -70,7 +88,7 @@ body::before{
   margin-top:18px;
 }
 .hero-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01));
   border:1px solid var(--border);
   border-radius:18px;
   padding:22px;
@@ -85,22 +103,23 @@ body::before{
   padding:10px 14px;border-radius:12px;
   border:1px solid var(--border);
   color:var(--text); text-decoration:none;
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.8);
 }
-.btn:hover{background: rgba(255,255,255,.08)}
+.btn:hover{background: rgba(225,6,0,.06)}
 .btn.primary{
-  background: rgba(110,168,255,.18);
-  border-color: rgba(110,168,255,.35);
+  background: rgba(225,6,0,.10);
+  border-color: rgba(225,6,0,.70);
 }
 
 .stats{
   display:grid; gap:10px;
 }
 .stat{
-  background: rgba(255,255,255,.04);
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01));
   border:1px solid var(--border);
   border-radius:16px;
   padding:16px;
+  box-shadow: var(--shadow);
 }
 .stat-num{display:block;font-size:22px;font-weight:800}
 .stat-label{color:var(--muted);font-size:12px}
@@ -117,11 +136,11 @@ body::before{
   width:min(420px, 100%);
   padding:10px 12px;border-radius:12px;
   border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.9);
   color:var(--text);
   outline:none;
 }
-.search::placeholder{color:rgba(170,178,207,.7)}
+.search::placeholder{color:rgba(95,95,95,.7)}
 
 .grid{
   display:grid;
@@ -130,20 +149,20 @@ body::before{
 }
 
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.01));
   border:1px solid var(--border);
   border-radius:16px;
   padding:16px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
 }
 .card h4{margin:0 0 6px;font-size:15px}
 .card p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .tag{
   font-size:11px;color:var(--muted);
-  border:1px solid var(--border);
+  border:1px solid rgba(225,6,0,.35);
   padding:5px 8px;border-radius:999px;
-  background: rgba(255,255,255,.03);
+  background: rgba(225,6,0,.06);
 }
 .card-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .card-actions a{
@@ -152,16 +171,20 @@ body::before{
   color:var(--text);
   padding:8px 10px;border-radius:12px;
   border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.9);
 }
-.card-actions a:hover{background: rgba(255,255,255,.08)}
+.card-actions a:hover{background: rgba(225,6,0,.06)}
 
 .footer-wrap{
   margin-top: 34px;
-  border-top: 1px solid var(--border);
-  background: transparent;   /* don’t paint a new background */
-}
 
+  /* match topbar look */
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(10px);
+
+  border-top: 1px solid rgba(225,6,0,.55);
+  box-shadow: 0 -10px 24px rgba(0,0,0,.05);
+}
 
 .footer-inner{
   padding: 18px 22px;
@@ -189,12 +212,14 @@ body::before{
   color: var(--text);
   padding: 8px 10px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,.03);
+
+  /* same “chip/button” style */
+  border: 1px solid rgba(225,6,0,.55);
+  background: rgba(255,255,255,.9);
 }
 
 .footer-inner .footer-links a:hover{
-  background: rgba(255,255,255,.08);
+  background: rgba(225,6,0,.06);
 }
 
 
@@ -225,11 +250,11 @@ body::before{
   padding: 8px 10px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.9);
   color: var(--text);
   cursor: pointer;
 }
-.btn-mini:hover{ background: rgba(255,255,255,.08); }
+.btn-mini:hover{ background: rgba(225,6,0,.06); }
 
 @media (max-width: 900px){
   .group-grid{ grid-template-columns: repeat(2, 1fr); }
@@ -256,4 +281,3 @@ body::before{
 @media (max-width: 900px){
   .detail-grid{ grid-template-columns: 1fr; }
 }
-
