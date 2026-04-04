@@ -4,96 +4,132 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DSS Portal</title>
-  <meta name="description" content="DSS Portal — tutorials, documentation, and links for DSS tools." />
-  <link rel="icon" href="Media/favicon.ico" type="image/x-icon">
+  <meta name="description" content="DSS Portal — tools, tutorials, and process documentation organized by department." />
+  <link rel="icon" href="Media/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
+  <!-- TOPBAR -->
   <header class="topbar">
-    <div class="brand">
-      <!-- Replace logo.png later -->
-     <div class="logo" aria-hidden="true">
-      <img class="logo-img" src="Media/DSS_Portal_Logo.png" alt="DSS Portal logo" />
-     </div>
+    <a class="brand" href="index.html" id="homeLink">
+      <div class="logo">
+        <img class="logo-img" src="Media/DSS_Portal_Logo.png" alt="DSS Portal" />
+      </div>
       <div class="brand-text">
         <h1>DSS Portal</h1>
-        <p>Tools • Tutorials • Documentation</p>
+        <p>Tools · Tutorials · Docs</p>
       </div>
-    </div>
-
+    </a>
     <nav class="nav">
-      <a href="#tools">Tools</a>
-      <a href="#tutorials">Tutorials</a>
+      <a href="index.html" class="active" id="navHome">Home</a>
+      <a href="index.html#tutorials" id="navTutorials">Tutorials</a>
+      <a href="docs.html">Docs</a>
     </nav>
   </header>
 
-  <main class="container">
-    <section class="hero">
-      <div class="hero-card">
-        <h2>Everything in one place.</h2>
-        <p>
-          A clean portal for DSS tools, quick links, and step-by-step tutorials.
-        </p>
+  <div style="position:relative; overflow:hidden;">
 
-        <div class="hero-actions">
-          <a class="btn primary" href="#tools">Browse tools</a>
-          <a class="btn" href="#tutorials">Watch tutorials</a>
+    <!-- ================================================
+         VIEW 1: DEPARTMENT GRID (default)
+         ================================================ -->
+    <div id="view-depts" class="view">
+
+      <!-- Hero -->
+      <div class="home-hero">
+        <span class="eyebrow">DSS Internal Portal</span>
+        <h2><em>Your tools,</em><br>by <span class="red">department.</span></h2>
+        <p>Select a department to browse its tools, tutorials, and process guides.</p>
+        <div class="stats-pills">
+          <div class="stat-pill"><strong id="toolCount">0</strong> tools</div>
+          <div class="stat-pill"><strong id="deptCount">0</strong> departments</div>
+          <div class="stat-pill"><strong id="videoCount">0</strong> tutorials</div>
         </div>
       </div>
 
-      <div class="stats">
-        <div class="stat">
-          <span class="stat-num" id="toolCount">0</span>
-          <span class="stat-label">Tools</span>
-        </div>
-        <div class="stat">
-          <span class="stat-num" id="videoCount">0</span>
-          <span class="stat-label">Tutorials</span>
-        </div>
-        <div class="stat">
-          <span class="stat-num">v1.2</span>
-          <span class="stat-label">Portal</span>
+      <!-- Department grid -->
+      <div class="container">
+        <div class="dept-grid-section">
+          <div class="dept-grid" id="deptGrid"></div>
         </div>
       </div>
-    </section>
 
-    <section class="section" id="tools">
-      <div class="section-head">
-        <h3>Tools</h3>
-        <input
-          id="search"
-          class="search"
-          type="search"
-          placeholder="Search a tool (e.g., Sales Report, Labels, Inventory)"
-        />
+    </div><!-- /view-depts -->
+
+
+    <!-- ================================================
+         VIEW 2: TOOLS FOR A DEPARTMENT
+         ================================================ -->
+    <div id="view-tools" class="view hidden">
+      <div class="container">
+
+        <!-- Back button -->
+        <div class="back-bar">
+          <button class="back-btn" id="backBtn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 12L6 8l4-4"/>
+            </svg>
+            All Departments
+          </button>
+        </div>
+
+        <!-- Department hero -->
+        <div class="dept-view-hero">
+          <div class="dept-view-icon" id="viewDeptIcon">📦</div>
+          <div class="dept-view-info">
+            <h2 class="dept-view-name" id="viewDeptName">Department</h2>
+            <p class="dept-view-desc" id="viewDeptDesc">Description</p>
+            <span class="dept-view-badge" id="viewDeptBadge">0 tools</span>
+          </div>
+        </div>
+
+        <!-- Search + label -->
+        <div class="dept-search-row">
+          <span class="dept-search-label">Tools</span>
+          <input
+            id="toolSearch"
+            class="search"
+            type="search"
+            placeholder="Search tools…"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Tool grid -->
+        <div class="tool-grid" id="deptToolGrid"></div>
+
       </div>
+    </div><!-- /view-tools -->
 
-      <div id="toolGrid"></div>
-    </section>
+  </div><!-- /relative wrapper -->
 
-    <section class="section" id="tutorials">
-      <div class="section-head">
-        <h3>Tutorials</h3>
-        <p class="muted"></p>
+
+  <!-- ================================================
+       TUTORIALS SECTION (always visible at bottom)
+       ================================================ -->
+  <div class="container" id="tutorials">
+    <div class="tutorials-section">
+      <div class="section-header">
+        <h2>Tutorials</h2>
+        <p>Video walkthroughs for DSS tools.</p>
       </div>
-
       <div class="grid" id="videoGrid"></div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <!-- Full-width footer (prevents body gradient mixing) -->
+  <!-- FOOTER -->
   <footer class="footer-wrap">
     <div class="container footer-inner">
-      <p>© <span id="year"></span> DSS Portal • Built by Juan D Aguilera</p>
-
+      <p>© <span id="year"></span> DSS Portal · Built by Juan D Aguilera</p>
       <div class="footer-links">
-        <a href="#tools">Tools</a>
-        <a href="#tutorials">Tutorials</a>
+        <a href="index.html">Home</a>
+        <a href="index.html#tutorials">Tutorials</a>
+        <a href="docs.html">Docs</a>
       </div>
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="data.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>
