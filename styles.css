@@ -735,6 +735,7 @@ body {
   background: rgba(255,255,255,0.85);
   backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
+  margin-top: 80px;
 }
 .footer-inner {
   display: flex; align-items: center; justify-content: space-between;
@@ -1271,10 +1272,22 @@ body {
 .procedure-step { cursor: pointer; }
 .step-check { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
-.procedure-step.done { border-color: var(--green-border); }
-.procedure-step.done .step-indicator { background: var(--green); }
-.procedure-step.done .step-title { text-decoration: line-through; color: var(--muted2); }
-.procedure-step.done .step-detail { color: var(--muted2); opacity: 0.6; }
+.procedure-step.done {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  border-left: 3px solid var(--accent);
+}
+.procedure-step.done .step-indicator {
+  background: var(--accent);
+  font-size: 15px;
+}
+.procedure-step.done .step-title {
+  text-decoration: line-through;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  color: var(--muted);
+}
+.procedure-step.done .step-paths { opacity: 0.5; }
 
 /* Progress bar */
 .procedure-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }

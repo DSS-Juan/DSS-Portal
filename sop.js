@@ -192,11 +192,13 @@ function main() {
 
     function applyState(states) {
       states.forEach((checked, i) => {
-        const label = document.getElementById(`step-${i}`);
-        const cb    = label && label.querySelector(".step-check");
-        if (!label || !cb) return;
+        const label     = document.getElementById(`step-${i}`);
+        const cb        = label && label.querySelector(".step-check");
+        const indicator = label && label.querySelector(".step-indicator");
+        if (!label || !cb || !indicator) return;
         cb.checked = checked;
         label.classList.toggle("done", checked);
+        indicator.textContent = checked ? "✓" : String(i + 1);
       });
       updateProgress(states);
     }
