@@ -248,7 +248,9 @@ function showDeptSops(deptId) {
 
   activeDeptId = deptId;
 
-  document.getElementById("viewDeptIcon").textContent = dept.icon;
+  const iconEl = document.getElementById("viewDeptIcon");
+  iconEl.innerHTML = deptIcon(dept.id);
+  iconEl.style.background = dept.color;
   document.getElementById("viewDeptName").textContent = dept.name;
   document.getElementById("viewDeptDesc").textContent = dept.desc;
   const count = deptSops.length;
