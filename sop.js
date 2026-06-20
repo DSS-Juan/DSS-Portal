@@ -88,7 +88,7 @@ function main() {
 
   document.getElementById("metaSopCode").textContent = sop.sopCode;
   const metaDeptEl = document.getElementById("metaDept");
-  metaDeptEl.innerHTML = dept ? `${dept.icon} ${escapeHtml(dept.name)}` : "—";
+  metaDeptEl.textContent = dept ? dept.name : "—";
 
   const statusEl = document.getElementById("metaStatus");
   const status   = sop.status || "Active";

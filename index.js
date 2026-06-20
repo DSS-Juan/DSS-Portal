@@ -17,6 +17,18 @@ function sopsForDept(deptId) {
   return sops.filter(s => s.deptId === deptId);
 }
 
+// ---- DEPARTMENT SVG ICONS ----
+const DEPT_ICONS = {
+  "customer-success": `<svg viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>`,
+  "operations":       `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  "sales":            `<svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  "automation":       `<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+};
+
+function deptIcon(deptId) {
+  return DEPT_ICONS[deptId] || `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>`;
+}
+
 // ---- DEPARTMENT CARD ----
 function makeDeptCard(dept) {
   const deptSops = sopsForDept(dept.id);
@@ -36,7 +48,7 @@ function makeDeptCard(dept) {
       tabindex="${isEmpty ? "-1" : "0"}"
       aria-label="Open ${escapeHtml(dept.name)}"
     >
-      <span class="dept-card-icon">${dept.icon}</span>
+      <div class="dept-card-icon">${deptIcon(dept.id)}</div>
       <div class="dept-card-name">${escapeHtml(dept.name)}</div>
       <div class="dept-card-desc">${escapeHtml(dept.desc)}</div>
       <div class="dept-card-footer">${footerHTML}</div>
@@ -71,7 +83,7 @@ function makeSopCard(s) {
 // ---- TUTORIAL CARD ----
 function makeTutorialCard(v) {
   const dept      = departments.find(d => d.id === v.deptId);
-  const deptLabel = dept ? `${dept.icon} ${dept.name}` : "";
+  const deptLabel = dept ? dept.name : "";
   const tags      = (v.tags || []).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("");
   const hasVideo  = !!v.videoId;
 

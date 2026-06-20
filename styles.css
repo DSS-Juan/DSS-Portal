@@ -235,17 +235,28 @@ body {
 
 /* Icon */
 .dept-card-icon {
-  font-size: 52px;
-  line-height: 1;
-  margin-bottom: 20px;
-  display: block;
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  background: var(--dept-color);
+  display: grid; place-items: center;
+  margin-bottom: 22px;
   position: relative; z-index: 1;
-  transition: transform 0.30s var(--ease-spring);
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.12));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--dept-color) 40%, transparent);
+  transition: transform 0.30s var(--ease-spring), box-shadow 0.25s var(--ease-out);
+}
+.dept-card-icon svg {
+  width: 26px; height: 26px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .dept-card:hover .dept-card-icon {
   transform: scale(1.10) translateY(-3px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--dept-color) 50%, transparent);
 }
+.dept-card.is-empty:hover .dept-card-icon { transform: none; box-shadow: none; }
 
 /* Name */
 .dept-card-name {
@@ -732,27 +743,28 @@ body {
    FOOTER
    ===================================================== */
 .footer-wrap {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
+  background: var(--text);
+  border-top: none;
   margin-top: 80px;
 }
 .footer-inner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 0; flex-wrap: wrap; gap: 12px;
+  padding: 28px 0; flex-wrap: wrap; gap: 12px;
 }
-.footer-inner p { color: var(--muted); font-size: 12px; }
+.footer-inner p { color: rgba(255,255,255,0.45); font-size: 12px; }
 
 .footer-links { display: flex; gap: 6px; flex-wrap: wrap; }
 .footer-links a {
-  font-size: 12px; text-decoration: none; color: var(--muted);
-  padding: 5px 13px; border-radius: 999px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
-  transition: color 0.12s, border-color 0.12s;
+  font-size: 12px; text-decoration: none; color: rgba(255,255,255,0.55);
+  padding: 5px 14px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.footer-links a:hover { color: var(--accent); border-color: var(--accent-border); }
+.footer-links a:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.07);
+}
 
 /* =====================================================
    VIDEO THUMBNAIL CARDS  (tutorials section)
