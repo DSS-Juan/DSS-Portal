@@ -1,0 +1,107 @@
+{
+  "SOP-CS-001": {
+    "id": "cs-001-act-open-accounts",
+    "title": "ACT Open Account Verification",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-002": {
+    "id": "cs-002-logging-interactions",
+    "title": "Logging Customer Interactions in ACT",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-003": {
+    "id": "cs-003-quality-issues",
+    "title": "Handling Customer Quality Product Issues",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-004": {
+    "id": "cs-004-damaged-product",
+    "title": "Damaged Product Credits and Refunds",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-005": {
+    "id": "cs-005-customer-notes",
+    "title": "General Customer Notes and Special Case: Out-of-Province Pickup Orders",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-006": {
+    "id": "cs-006-csv-bulk-orders",
+    "title": "CSV Bulk Order Entry for Wholesale Accounts",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-008": {
+    "id": "cs-008-product-swap",
+    "title": "Product Swap Customer Outreach",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-009": {
+    "id": "cs-009-refund-process",
+    "title": "Refund Process for E-Transfer Payments Converted to Credit",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-010": {
+    "id": "cs-010-popa-vape",
+    "title": "Popa Vape Flavour Shot Order Processing",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-011": {
+    "id": "cs-011-vape-street",
+    "title": "Vape Street Holdings Order Recreation",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-012": {
+    "id": "cs-012-order-modification",
+    "title": "Order Modification — Additions",
+    "synced": "bootstrap"
+  },
+  "SOP-CS-013": {
+    "id": "cs-013-product-availability",
+    "title": "Product Availability Inquiries",
+    "synced": "bootstrap"
+  },
+  "SOP-OPS-002": {
+    "id": "ops-002-excise-stamps",
+    "title": "Excise Stamp Ordering",
+    "synced": "bootstrap"
+  },
+  "SOP-OPS-003": {
+    "id": "ops-003-flavour-ordering",
+    "title": "Monthly Flavour Ordering",
+    "synced": "bootstrap"
+  },
+  "SOP-OPS-004": {
+    "id": "ops-004-return-shipping",
+    "title": "Return Shipping Label Process for Damaged Bottles",
+    "synced": "bootstrap"
+  },
+  "SOP-OPS-005": {
+    "id": "ops-005-mixed-unit-count",
+    "title": "Adjusting Mixed Unit Count After Final Mixing Volume Change",
+    "synced": "bootstrap"
+  },
+  "SOP-OPS-006": {
+    "id": "ops-006-shopify-continue-deny",
+    "title": "Shopify Continue or Deny Inventory Updates",
+    "synced": "bootstrap"
+  },
+  "SOP-SALES-001": {
+    "id": "sales-001-missing-opportunities",
+    "title": "Missing Opportunities and Back in Stock Follow-Up",
+    "synced": "bootstrap"
+  },
+  "SOP-SALES-002": {
+    "id": "sales-002-account-management",
+    "title": "Customer Account Management",
+    "synced": "bootstrap"
+  },
+  "SOP-AUTO-001": {
+    "id": "auto-001-adding-automation",
+    "title": "Adding a New Automation",
+    "synced": "bootstrap"
+  },
+  "SOP-AUTO-002": {
+    "id": "auto-002-sop-drafting",
+    "title": "SOP Drafting Workflow",
+    "synced": "bootstrap"
+  }
+}
