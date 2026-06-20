@@ -72,14 +72,14 @@ function main() {
   const qrgBtn = document.getElementById("downloadQrgBtn");
 
   if (sop.pdfPath) {
-    sopBtn.href     = sop.pdfPath;
+    sopBtn.href = sop.pdfPath;
     sopBtn.setAttribute("download", sop.pdfPath.split("/").pop());
   } else {
     sopBtn.style.display = "none";
   }
 
   if (sop.qrgPath) {
-    qrgBtn.href     = sop.qrgPath;
+    qrgBtn.href = sop.qrgPath;
     qrgBtn.setAttribute("download", sop.qrgPath.split("/").pop());
   } else {
     qrgBtn.style.display = "none";
@@ -137,18 +137,71 @@ function main() {
     hide("cadenceSection");
   }
 
-  // Procedure steps
+  // ---- INTERACTIVE CHECKLIST ----
   if (sop.steps && sop.steps.length > 0) {
-    const stepsEl = document.getElementById("sopSteps");
+    const stepsEl    = document.getElementById("sopSteps");
+    const storageKey = `dss-checklist-${sop.id}`;
+    const total      = sop.steps.length;
+
+    // Render steps as interactive <label> rows
     stepsEl.innerHTML = sop.steps.map((step, i) => `
-      <div class="procedure-step">
-        <div class="step-number">${i + 1}</div>
+      <label class="procedure-step" id="step-${i}">
+        <input type="checkbox" class="step-check" data-step="${i}">
+        <div class="step-indicator">${i + 1}</div>
         <div class="step-content">
           <div class="step-title">${escapeHtml(step.title)}</div>
           ${step.detail ? `<div class="step-detail">${escapeHtml(step.detail)}</div>` : ""}
         </div>
-      </div>
+      </label>
     `).join("");
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(storageKey)) || Array(total).fill(false); }
+      catch { return Array(total).fill(false); }
+    }
+    function saveState(states) { localStorage.setItem(storageKey, JSON.stringify(states)); }
+
+    function updateProgress(states) {
+      const done = states.filter(Boolean).length;
+      document.getElementById("progressLabel").textContent = `${done} / ${total} steps`;
+      const fill = document.getElementById("progressFill");
+      fill.style.width = `${Math.round(done / total * 100)}%`;
+      fill.style.background = done === total ? "var(--green)" : "var(--accent)";
+    }
+
+    function applyState(states) {
+      states.forEach((checked, i) => {
+        const label = document.getElementById(`step-${i}`);
+        const cb    = label && label.querySelector(".step-check");
+        if (!label || !cb) return;
+        cb.checked = checked;
+        label.classList.toggle("done", checked);
+      });
+      updateProgress(states);
+    }
+
+    // Restore saved state on load
+    const states = loadState();
+    applyState(states);
+
+    // Toggle on checkbox change (event delegation)
+    stepsEl.addEventListener("change", (e) => {
+      const cb = e.target.closest(".step-check");
+      if (!cb) return;
+      const i = parseInt(cb.dataset.step, 10);
+      states[i] = cb.checked;
+      document.getElementById(`step-${i}`).classList.toggle("done", cb.checked);
+      saveState(states);
+      updateProgress(states);
+    });
+
+    // Reset button
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem(storageKey);
+      states.fill(false);
+      applyState(states);
+    });
+
   } else {
     hide("procedureSection");
   }
