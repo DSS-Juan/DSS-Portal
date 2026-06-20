@@ -132,25 +132,10 @@ function main() {
     document.getElementById("sopSplit").querySelector(".sop-pdf-panel").style.display = "none";
   }
 
-  // Purpose
-  if (sop.purpose) {
-    document.getElementById("sopPurpose").textContent = sop.purpose;
-  } else { hide("purposeSection"); }
-
-  // Scope
-  if (sop.scope) {
-    document.getElementById("sopScope").textContent = sop.scope;
-  } else { hide("scopeSection"); }
-
-  // Definitions
-  if (sop.definitions && sop.definitions.length > 0) {
-    document.getElementById("sopDefinitions").innerHTML = sop.definitions.map(d => `
-      <div class="definition-item">
-        <dt class="def-term">${escapeHtml(d.term)}</dt>
-        <dd class="def-meaning">${escapeHtml(d.meaning)}</dd>
-      </div>
-    `).join("");
-  } else { hide("definitionsSection"); }
+  // Cadence
+  if (sop.cadence) {
+    document.getElementById("sopCadence").textContent = sop.cadence;
+  } else { hide("cadenceSection"); }
 
   // Roles
   if (sop.roles && sop.roles.length > 0) {
@@ -161,11 +146,6 @@ function main() {
       </tr>
     `).join("");
   } else { hide("rolesSection"); }
-
-  // Cadence
-  if (sop.cadence) {
-    document.getElementById("sopCadence").textContent = sop.cadence;
-  } else { hide("cadenceSection"); }
 
   // Interactive checklist with inline path chips
   if (sop.steps && sop.steps.length > 0) {

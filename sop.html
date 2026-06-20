@@ -29,10 +29,8 @@
 
   <main class="container">
 
-    <!-- SOP HERO (full width) -->
+    <!-- 1. HERO -->
     <section class="sop-hero">
-
-      <!-- Breadcrumb -->
       <div class="breadcrumb">
         <a href="index.html">Home</a>
         <span class="breadcrumb-sep">›</span>
@@ -41,7 +39,6 @@
         <span id="breadcrumbSop">—</span>
       </div>
 
-      <!-- Meta chips -->
       <div class="sop-meta-chips">
         <span class="sop-code-badge" id="metaSopCode">SOP-CS-001</span>
         <span class="meta-chip" id="metaDept">Department</span>
@@ -51,7 +48,6 @@
       <h2 id="sopTitle">Loading…</h2>
       <p class="desc" id="sopDesc"></p>
 
-      <!-- Download bar -->
       <div class="download-bar" id="downloadBar">
         <a class="download-btn" id="downloadSopBtn" href="#" download>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -66,10 +62,9 @@
           Download QRG
         </a>
       </div>
+    </section>
 
-    </section><!-- /sop-hero -->
-
-    <!-- METADATA STRIP (full width) -->
+    <!-- 2. META STRIP -->
     <section class="section sop-meta-section">
       <div class="sop-meta-strip">
         <div class="sop-meta-item">
@@ -87,7 +82,26 @@
       </div>
     </section>
 
-    <!-- TWO-COLUMN: PDF viewer (left) + Checklist (right) -->
+    <!-- 3. CADENCE -->
+    <section class="section" id="cadenceSection">
+      <div class="section-head"><h3>When / Cadence</h3></div>
+      <div class="callout" id="sopCadence"></div>
+    </section>
+
+    <!-- 4. ROLES & RESPONSIBILITIES -->
+    <section class="section" id="rolesSection">
+      <div class="section-head"><h3>Roles &amp; Responsibilities</h3></div>
+      <div class="table-wrap">
+        <table class="roles-table" id="sopRoles">
+          <thead>
+            <tr><th>Role</th><th>Responsibility</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. PDF + CHECKLIST SPLIT -->
     <div class="sop-split" id="sopSplit">
 
       <!-- LEFT: embedded PDF -->
@@ -117,46 +131,14 @@
           </div>
           <div class="procedure-list" id="sopSteps"></div>
         </section>
-
-        <section class="section" id="notesSection">
-          <div class="section-head"><h3>Notes &amp; Exceptions</h3></div>
-          <ul class="sop-notes-list" id="sopNotes"></ul>
-        </section>
       </div>
 
     </div><!-- /sop-split -->
 
-    <!-- FULL WIDTH: supplementary reference sections -->
-    <section class="section" id="purposeSection">
-      <div class="section-head"><h3>Purpose</h3></div>
-      <p class="sop-text" id="sopPurpose"></p>
-    </section>
-
-    <section class="section" id="scopeSection">
-      <div class="section-head"><h3>Scope</h3></div>
-      <p class="sop-text" id="sopScope"></p>
-    </section>
-
-    <section class="section" id="definitionsSection">
-      <div class="section-head"><h3>Definitions</h3></div>
-      <dl class="definition-list" id="sopDefinitions"></dl>
-    </section>
-
-    <section class="section" id="rolesSection">
-      <div class="section-head"><h3>Roles &amp; Responsibilities</h3></div>
-      <div class="table-wrap">
-        <table class="roles-table" id="sopRoles">
-          <thead>
-            <tr><th>Role</th><th>Responsibility</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="section" id="cadenceSection">
-      <div class="section-head"><h3>When / Cadence</h3></div>
-      <div class="callout" id="sopCadence"></div>
+    <!-- 6. NOTES & EXCEPTIONS -->
+    <section class="section" id="notesSection">
+      <div class="section-head"><h3>Notes &amp; Exceptions</h3></div>
+      <ul class="sop-notes-list" id="sopNotes"></ul>
     </section>
 
   </main>
@@ -173,6 +155,6 @@
   </footer>
 
   <script src="data.js?v=5"></script>
-  <script src="sop.js?v=8"></script>
+  <script src="sop.js?v=9"></script>
 </body>
 </html>
