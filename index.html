@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DSS Portal</title>
-  <meta name="description" content="DSS Portal — tools, tutorials, and process documentation organized by department." />
+  <meta name="description" content="DSS Portal — SOPs, tutorials, and process documentation organized by department." />
   <link rel="icon" href="Media/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -24,7 +24,6 @@
     <nav class="nav">
       <a href="index.html" class="active" id="navHome">Home</a>
       <a href="index.html#tutorials" id="navTutorials">Tutorials</a>
-      <a href="docs.html">Docs</a>
     </nav>
   </header>
 
@@ -38,10 +37,10 @@
       <!-- Hero -->
       <div class="home-hero">
         <span class="eyebrow">DSS Internal Portal</span>
-        <h2><em>Your tools,</em><br>by <span class="red">department.</span></h2>
-        <p>Select a department to browse its tools, tutorials, and process guides.</p>
+        <h2><em>Your SOPs,</em><br>by <span class="red">department.</span></h2>
+        <p>Select a department to browse its standard operating procedures and tutorials.</p>
         <div class="stats-pills">
-          <div class="stat-pill"><strong id="toolCount">0</strong> tools</div>
+          <div class="stat-pill"><strong id="sopCount">0</strong> SOPs</div>
           <div class="stat-pill"><strong id="deptCount">0</strong> departments</div>
           <div class="stat-pill"><strong id="videoCount">0</strong> tutorials</div>
         </div>
@@ -79,24 +78,24 @@
           <div class="dept-view-info">
             <h2 class="dept-view-name" id="viewDeptName">Department</h2>
             <p class="dept-view-desc" id="viewDeptDesc">Description</p>
-            <span class="dept-view-badge" id="viewDeptBadge">0 tools</span>
+            <span class="dept-view-badge" id="viewDeptBadge">0 SOPs</span>
           </div>
         </div>
 
         <!-- Search + label -->
         <div class="dept-search-row">
-          <span class="dept-search-label">Tools</span>
+          <span class="dept-search-label">SOPs</span>
           <input
-            id="toolSearch"
+            id="sopSearch"
             class="search"
             type="search"
-            placeholder="Search tools…"
+            placeholder="Search SOPs…"
             autocomplete="off"
           />
         </div>
 
-        <!-- Tool grid -->
-        <div class="tool-grid" id="deptToolGrid"></div>
+        <!-- SOP grid -->
+        <div class="sop-grid" id="deptSopGrid"></div>
 
       </div>
     </div><!-- /view-tools -->
@@ -124,7 +123,6 @@
       <div class="footer-links">
         <a href="index.html">Home</a>
         <a href="index.html#tutorials">Tutorials</a>
-        <a href="docs.html">Docs</a>
       </div>
     </div>
   </footer>

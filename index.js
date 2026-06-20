@@ -1,6 +1,6 @@
 // ============================================================
 // DSS Portal v3 — Homepage Logic
-// Two views: department grid → department tools
+// Two views: department grid → department SOPs
 // ============================================================
 
 // ---- UTILS ----
@@ -13,19 +13,19 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
-function toolsForDept(deptId) {
-  return tools.filter(t => t.deptId === deptId);
+function sopsForDept(deptId) {
+  return sops.filter(s => s.deptId === deptId);
 }
 
 // ---- DEPARTMENT CARD ----
 function makeDeptCard(dept) {
-  const deptTools = toolsForDept(dept.id);
-  const count     = deptTools.length;
-  const isEmpty   = count === 0;
+  const deptSops = sopsForDept(dept.id);
+  const count    = deptSops.length;
+  const isEmpty  = count === 0;
 
   const footerHTML = isEmpty
-    ? `<span class="dept-card-count empty">No tools yet</span><div class="dept-card-arrow" style="opacity:0.3">→</div>`
-    : `<span class="dept-card-count"><strong>${count}</strong> ${count === 1 ? "tool" : "tools"}</span><div class="dept-card-arrow">→</div>`;
+    ? `<span class="dept-card-count empty">No SOPs yet</span><div class="dept-card-arrow" style="opacity:0.3">→</div>`
+    : `<span class="dept-card-count"><strong>${count}</strong> ${count === 1 ? "SOP" : "SOPs"}</span><div class="dept-card-arrow">→</div>`;
 
   return `
     <div
@@ -44,22 +44,25 @@ function makeDeptCard(dept) {
   `;
 }
 
-// ---- TOOL CARD ----
-function makeToolCard(t) {
-  const tags     = (t.tags || []).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("");
-  const toolLink = `tool.html?tool=${encodeURIComponent(t.id)}`;
+// ---- SOP CARD ----
+function makeSopCard(s) {
+  const sopLink = `sop.html?sop=${encodeURIComponent(s.id)}`;
+  const status  = s.status || "Active";
+  const hasQrg  = !!s.qrgPath;
 
   return `
-    <article class="tool-card">
-      <div class="tool-card-meta">
-        <span class="version-badge">${escapeHtml(t.version)}</span>
+    <article class="sop-card">
+      <div class="sop-card-top">
+        <span class="sop-code">${escapeHtml(s.sopCode)}</span>
+        <div class="sop-card-chips">
+          <span class="status-chip ${status.toLowerCase()}">${escapeHtml(status)}</span>
+          ${hasQrg ? `<span class="qrg-chip">QRG ✓</span>` : ""}
+        </div>
       </div>
-      <h4>${escapeHtml(t.name)}</h4>
-      <p>${escapeHtml(t.desc)}</p>
-      <div class="tags">${tags}</div>
+      <h4>${escapeHtml(s.title)}</h4>
+      <p>${escapeHtml(s.desc)}</p>
       <div class="card-actions">
-        <a class="open-link" href="${toolLink}">Open →</a>
-        <button class="btn-mini" type="button" data-copy-path="${escapeHtml(t.id)}">Copy path</button>
+        <a class="open-link" href="${sopLink}">View SOP →</a>
       </div>
     </article>
   `;
@@ -72,9 +75,6 @@ function makeTutorialCard(v) {
   const tags      = (v.tags || []).map(x => `<span class="tag">${escapeHtml(x)}</span>`).join("");
   const hasVideo  = !!v.videoId;
 
-  // Thumbnail URL — YouTube serves several resolutions:
-  // maxresdefault.jpg (1280×720, may not exist for all videos)
-  // hqdefault.jpg     (480×360, always exists)
   const thumbSrc = hasVideo
     ? `https://img.youtube.com/vi/${encodeURIComponent(v.videoId)}/hqdefault.jpg`
     : "";
@@ -107,7 +107,6 @@ function makeTutorialCard(v) {
     `;
   }
 
-  // Fallback: no video yet
   return `
     <article class="card">
       <h4>${escapeHtml(v.title)}</h4>
@@ -133,14 +132,13 @@ function renderTutorials() {
     grid.innerHTML = `<div class="empty-state">No tutorials yet — add video IDs to <strong>data.js</strong> as you upload to YouTube.</div>`;
     return;
   }
-  // Use video-grid class when there are actual video cards
   grid.className = "video-grid";
   grid.innerHTML = tutorials.map(makeTutorialCard).join("");
 }
 
 // ---- LIGHTBOX ----
 function buildLightbox() {
-  if (document.getElementById("lightboxOverlay")) return; // already built
+  if (document.getElementById("lightboxOverlay")) return;
   const el = document.createElement("div");
   el.id = "lightboxOverlay";
   el.className = "lightbox-overlay";
@@ -157,13 +155,11 @@ function buildLightbox() {
   `;
   document.body.appendChild(el);
 
-  // Close on overlay click or button
   el.addEventListener("click", (e) => {
     if (e.target === el) closeLightbox();
   });
   document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
 
-  // Close on Escape key
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeLightbox();
   });
@@ -175,8 +171,7 @@ function openLightbox(videoId, title) {
   const frame   = document.getElementById("lightboxFrame");
   const lbTitle = document.getElementById("lightboxTitle");
 
-  // Autoplay when opened; rel=0 hides related videos; modestbranding=1 hides logo
-  frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1&color=white`;
+  frame.src  = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1&color=white`;
   lbTitle.textContent = title;
 
   overlay.classList.add("open");
@@ -188,30 +183,30 @@ function closeLightbox() {
   const frame   = document.getElementById("lightboxFrame");
   if (!overlay) return;
   overlay.classList.remove("open");
-  frame.src = "";   // stop video immediately
+  frame.src = "";
   document.body.style.overflow = "";
 }
 
-// ---- RENDER: tools for a department ----
-function renderDeptTools(deptId, query = "") {
-  const grid = document.getElementById("deptToolGrid");
-  let deptTools = toolsForDept(deptId);
+// ---- RENDER: SOPs for a department ----
+function renderDeptSops(deptId, query = "") {
+  const grid = document.getElementById("deptSopGrid");
+  let deptSops = sopsForDept(deptId);
 
   if (query) {
     const q = query.toLowerCase();
-    deptTools = deptTools.filter(t =>
-      [t.name, t.desc, ...(t.tags || [])].join(" ").toLowerCase().includes(q)
+    deptSops = deptSops.filter(s =>
+      [s.title, s.desc, s.sopCode].join(" ").toLowerCase().includes(q)
     );
   }
 
-  if (deptTools.length === 0) {
+  if (deptSops.length === 0) {
     grid.innerHTML = query
-      ? `<div class="empty-state">No tools matched "<strong>${escapeHtml(query)}</strong>".</div>`
-      : `<div class="empty-state">No tools in this department yet.</div>`;
+      ? `<div class="empty-state">No SOPs matched "<strong>${escapeHtml(query)}</strong>".</div>`
+      : `<div class="empty-state">No SOPs in this department yet.</div>`;
     return;
   }
 
-  grid.innerHTML = deptTools.map(makeToolCard).join("");
+  grid.innerHTML = deptSops.map(makeSopCard).join("");
 }
 
 // ============================================================
@@ -223,43 +218,36 @@ const viewDepts = document.getElementById("view-depts");
 const viewTools = document.getElementById("view-tools");
 
 function showDeptGrid() {
-  // Reset state
   activeDeptId = null;
-  document.getElementById("toolSearch").value = "";
+  document.getElementById("sopSearch").value = "";
 
-  // Animate out tools view, animate in dept grid
   viewTools.classList.add("hidden");
   viewDepts.classList.remove("hidden");
 
-  // Scroll to top smoothly
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function showDeptTools(deptId) {
-  const dept      = departments.find(d => d.id === deptId);
+function showDeptSops(deptId) {
+  const dept     = departments.find(d => d.id === deptId);
   if (!dept) return;
 
-  const deptTools = toolsForDept(deptId);
-  if (deptTools.length === 0) return; // Empty depts are not clickable
+  const deptSops = sopsForDept(deptId);
+  if (deptSops.length === 0) return;
 
   activeDeptId = deptId;
 
-  // Populate header
   document.getElementById("viewDeptIcon").textContent = dept.icon;
   document.getElementById("viewDeptName").textContent = dept.name;
   document.getElementById("viewDeptDesc").textContent = dept.desc;
-  const count = deptTools.length;
+  const count = deptSops.length;
   document.getElementById("viewDeptBadge").textContent =
-    `${count} ${count === 1 ? "tool" : "tools"}`;
+    `${count} ${count === 1 ? "SOP" : "SOPs"}`;
 
-  // Render tools
-  renderDeptTools(deptId);
+  renderDeptSops(deptId);
 
-  // Animate in tools view
   viewDepts.classList.add("hidden");
   viewTools.classList.remove("hidden");
 
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -267,56 +255,29 @@ function showDeptTools(deptId) {
 document.getElementById("deptGrid").addEventListener("click", (e) => {
   const card = e.target.closest(".dept-card");
   if (!card || card.classList.contains("is-empty")) return;
-  showDeptTools(card.dataset.deptId);
+  showDeptSops(card.dataset.deptId);
 });
 
-// Keyboard accessibility for dept cards
 document.getElementById("deptGrid").addEventListener("keydown", (e) => {
   if (e.key !== "Enter" && e.key !== " ") return;
   const card = e.target.closest(".dept-card");
   if (!card || card.classList.contains("is-empty")) return;
   e.preventDefault();
-  showDeptTools(card.dataset.deptId);
+  showDeptSops(card.dataset.deptId);
 });
 
 // ---- Back button ----
 document.getElementById("backBtn").addEventListener("click", showDeptGrid);
 
-// ---- In-dept search ----
-document.getElementById("toolSearch").addEventListener("input", (e) => {
+// ---- In-dept SOP search ----
+document.getElementById("sopSearch").addEventListener("input", (e) => {
   if (!activeDeptId) return;
-  renderDeptTools(activeDeptId, e.target.value.trim());
+  renderDeptSops(activeDeptId, e.target.value.trim());
 });
-
-// ---- Copy path (event delegation — works in both views) ----
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest("[data-copy-path]");
-  if (!btn) return;
-
-  const toolId   = btn.getAttribute("data-copy-path");
-  const tool     = tools.find(t => t.id === toolId);
-  if (!tool) return;
-
-  const pathText = Array.isArray(tool.path) ? tool.path.join("\n") : tool.path;
-  try {
-    await navigator.clipboard.writeText(pathText);
-    btn.textContent = "Copied ✓";
-    setTimeout(() => (btn.textContent = "Copy path"), 1000);
-  } catch {
-    alert("Copy failed — open the tool page to copy the path manually.");
-  }
-});
-
-// ============================================================
-// INIT
-// ============================================================
-renderDeptGrid();
-renderTutorials();
 
 // ---- Video card clicks (lightbox) ----
 document.addEventListener("click", (e) => {
   const card = e.target.closest("[data-video-id]");
-  // Don't intercept clicks on the "Watch on YouTube" link
   if (!card || e.target.closest(".video-yt-link")) return;
   openLightbox(card.dataset.videoId, card.dataset.videoTitle);
 });
@@ -329,7 +290,13 @@ document.addEventListener("keydown", (e) => {
   openLightbox(card.dataset.videoId, card.dataset.videoTitle);
 });
 
-document.getElementById("toolCount").textContent  = String(tools.length);
+// ============================================================
+// INIT
+// ============================================================
+renderDeptGrid();
+renderTutorials();
+
+document.getElementById("sopCount").textContent   = String(sops.length);
 document.getElementById("deptCount").textContent  = String(departments.length);
 document.getElementById("videoCount").textContent = String(tutorials.length);
 document.getElementById("year").textContent       = String(new Date().getFullYear());

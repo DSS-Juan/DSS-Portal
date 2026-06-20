@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SOP · DSS Portal</title>
+  <meta name="description" content="DSS Standard Operating Procedure" />
+  <link rel="icon" href="Media/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <div class="logo">
+        <img class="logo-img" src="Media/DSS_Portal_Logo.png" alt="DSS Portal" />
+      </div>
+      <div class="brand-text">
+        <h1>DSS Portal</h1>
+        <p>SOP Detail</p>
+      </div>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="index.html#tutorials">Tutorials</a>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- SOP HERO -->
+    <section class="sop-hero">
+
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <a href="index.html" id="breadcrumbDept">Department</a>
+        <span class="breadcrumb-sep">›</span>
+        <span id="breadcrumbSop">—</span>
+      </div>
+
+      <!-- Meta chips -->
+      <div class="sop-meta-chips">
+        <span class="sop-code-badge" id="metaSopCode">SOP-CS-001</span>
+        <span class="meta-chip" id="metaDept">Department</span>
+        <span class="meta-chip status-chip" id="metaStatus">Active</span>
+      </div>
+
+      <h2 id="sopTitle">Loading…</h2>
+      <p class="desc" id="sopDesc"></p>
+
+      <!-- Download bar -->
+      <div class="download-bar" id="downloadBar">
+        <a class="download-btn" id="downloadSopBtn" href="#" download>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v9M4 7l4 4 4-4M2 13h12"/>
+          </svg>
+          Download SOP PDF
+        </a>
+        <a class="download-btn secondary" id="downloadQrgBtn" href="#" download>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2v9M4 7l4 4 4-4M2 13h12"/>
+          </svg>
+          Download QRG PDF
+        </a>
+      </div>
+
+    </section><!-- /sop-hero -->
+
+    <!-- METADATA STRIP -->
+    <section class="section sop-meta-section">
+      <div class="sop-meta-strip">
+        <div class="sop-meta-item">
+          <span class="sop-meta-label">Owner</span>
+          <span class="sop-meta-value" id="sopOwner">—</span>
+        </div>
+        <div class="sop-meta-item">
+          <span class="sop-meta-label">Version</span>
+          <span class="sop-meta-value" id="sopVersion">—</span>
+        </div>
+        <div class="sop-meta-item">
+          <span class="sop-meta-label">Effective Date</span>
+          <span class="sop-meta-value" id="sopDate">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PURPOSE -->
+    <section class="section" id="purposeSection">
+      <div class="section-head"><h3>Purpose</h3></div>
+      <p class="sop-text" id="sopPurpose"></p>
+    </section>
+
+    <!-- SCOPE -->
+    <section class="section" id="scopeSection">
+      <div class="section-head"><h3>Scope</h3></div>
+      <p class="sop-text" id="sopScope"></p>
+    </section>
+
+    <!-- DEFINITIONS -->
+    <section class="section" id="definitionsSection">
+      <div class="section-head"><h3>Definitions</h3></div>
+      <dl class="definition-list" id="sopDefinitions"></dl>
+    </section>
+
+    <!-- ROLES & RESPONSIBILITIES -->
+    <section class="section" id="rolesSection">
+      <div class="section-head"><h3>Roles &amp; Responsibilities</h3></div>
+      <div class="table-wrap">
+        <table class="roles-table" id="sopRoles">
+          <thead>
+            <tr><th>Role</th><th>Responsibility</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CADENCE -->
+    <section class="section" id="cadenceSection">
+      <div class="section-head"><h3>When / Cadence</h3></div>
+      <div class="callout" id="sopCadence"></div>
+    </section>
+
+    <!-- PROCEDURE -->
+    <section class="section" id="procedureSection">
+      <div class="section-head"><h3>Procedure</h3></div>
+      <div class="procedure-list" id="sopSteps"></div>
+    </section>
+
+    <!-- NOTES & EXCEPTIONS -->
+    <section class="section" id="notesSection">
+      <div class="section-head"><h3>Notes &amp; Exceptions</h3></div>
+      <ul class="sop-notes-list" id="sopNotes"></ul>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer-wrap">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> DSS Portal · Built by Juan D Aguilera</p>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="index.html#tutorials">Tutorials</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="sop.js"></script>
+</body>
+</html>
