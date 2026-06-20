@@ -1308,6 +1308,7 @@ body {
   transition: background 0.15s;
 }
 .path-copy-btn:hover { background: var(--accent-bg); }
+.step-paths { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 
 /* Two-column split: PDF viewer (wide) + Checklist (narrow) */
 .sop-split {

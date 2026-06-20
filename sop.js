@@ -48,22 +48,18 @@ async function copyText(text, btn) {
   }, 1200);
 }
 
-// Detect Windows file paths (e.g. P:\Folder\File.csv) and wrap them
-// in an inline copyable chip. Everything else is escaped as plain text.
+// Detect Windows file paths (e.g. P:\Folder\File.csv) and return
+// only the copyable chips — no surrounding prose text.
 const PATH_REGEX = /([A-Za-z]:\\[\w\s\-_.\\]+\.(?:csv|xlsx?|xlsm|xlsb|txt|pdf|docx?|xlam|accdb|json|xml|adm))/gi;
 
-function renderDetailWithPaths(text) {
+function extractPathChips(text) {
   PATH_REGEX.lastIndex = 0;
   let html  = "";
-  let last  = 0;
   let match;
   while ((match = PATH_REGEX.exec(text)) !== null) {
-    html += escapeHtml(text.slice(last, match.index));
     const path = match[1];
     html += `<span class="inline-path"><code class="path-text">${escapeHtml(path)}</code><button class="path-copy-btn" type="button" data-path="${escapeHtml(path)}">Copy</button></span>`;
-    last = match.index + match[0].length;
   }
-  html += escapeHtml(text.slice(last));
   return html;
 }
 
@@ -177,16 +173,20 @@ function main() {
     const storageKey = `dss-checklist-${sop.id}`;
     const total      = sop.steps.length;
 
-    stepsEl.innerHTML = sop.steps.map((step, i) => `
-      <label class="procedure-step" id="step-${i}">
-        <input type="checkbox" class="step-check" data-step="${i}">
-        <div class="step-indicator">${i + 1}</div>
-        <div class="step-content">
-          <div class="step-title">${escapeHtml(step.title)}</div>
-          ${step.detail ? `<div class="step-detail">${renderDetailWithPaths(step.detail)}</div>` : ""}
-        </div>
-      </label>
-    `).join("");
+    stepsEl.innerHTML = sop.steps.map((step, i) => {
+      // Extract only the path chips from detail — skip the full description text
+      const pathChips = extractPathChips(step.detail || "");
+      return `
+        <label class="procedure-step" id="step-${i}">
+          <input type="checkbox" class="step-check" data-step="${i}">
+          <div class="step-indicator">${i + 1}</div>
+          <div class="step-content">
+            <div class="step-title">${escapeHtml(step.title)}</div>
+            ${pathChips ? `<div class="step-paths">${pathChips}</div>` : ""}
+          </div>
+        </label>
+      `;
+    }).join("");
 
     // Copy path chips — delegated click handler
     stepsEl.addEventListener("click", (e) => {
