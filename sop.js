@@ -48,6 +48,25 @@ async function copyText(text, btn) {
   }, 1200);
 }
 
+// Detect Windows file paths (e.g. P:\Folder\File.csv) and wrap them
+// in an inline copyable chip. Everything else is escaped as plain text.
+const PATH_REGEX = /([A-Za-z]:\\[\w\s\-_.\\]+\.(?:csv|xlsx?|xlsm|xlsb|txt|pdf|docx?|xlam|accdb|json|xml|adm))/gi;
+
+function renderDetailWithPaths(text) {
+  PATH_REGEX.lastIndex = 0;
+  let html  = "";
+  let last  = 0;
+  let match;
+  while ((match = PATH_REGEX.exec(text)) !== null) {
+    html += escapeHtml(text.slice(last, match.index));
+    const path = match[1];
+    html += `<span class="inline-path"><code class="path-text">${escapeHtml(path)}</code><button class="path-copy-btn" type="button" data-path="${escapeHtml(path)}">Copy</button></span>`;
+    last = match.index + match[0].length;
+  }
+  html += escapeHtml(text.slice(last));
+  return html;
+}
+
 function main() {
   const params = new URLSearchParams(window.location.search);
   const id     = params.get("sop");
@@ -60,44 +79,38 @@ function main() {
     document.getElementById("sopDesc").textContent  = "Return to the home page and select a department to browse SOPs.";
     document.getElementById("breadcrumbSop").textContent = "Not found";
     document.getElementById("downloadBar").style.display = "none";
-    document.getElementById("copyPaths").style.display   = "none";
     document.getElementById("sopSplit").style.display    = "none";
     return;
   }
 
   const dept = (typeof departments !== "undefined") && departments.find(d => d.id === sop.deptId);
 
-  // Page <title>
   document.title = `${sop.sopCode} · ${sop.title} · DSS Portal`;
 
-  // Breadcrumb
   if (dept) document.getElementById("breadcrumbDept").textContent = dept.name;
   document.getElementById("breadcrumbSop").textContent = sop.sopCode;
 
-  // Meta chips
   document.getElementById("metaSopCode").textContent = sop.sopCode;
   const metaDeptEl = document.getElementById("metaDept");
   metaDeptEl.innerHTML = dept ? `${dept.icon} ${escapeHtml(dept.name)}` : "—";
+
   const statusEl = document.getElementById("metaStatus");
   const status   = sop.status || "Active";
   statusEl.textContent = status;
   statusEl.classList.add(status.toLowerCase());
 
-  // Hero content
   document.getElementById("sopTitle").textContent = sop.title;
   document.getElementById("sopDesc").textContent  = sop.desc;
 
-  // ---- DOWNLOAD BUTTONS ----
+  // Download buttons
   const sopBtn = document.getElementById("downloadSopBtn");
   const qrgBtn = document.getElementById("downloadQrgBtn");
-
   if (sop.pdfPath) {
     sopBtn.href = sop.pdfPath;
     sopBtn.setAttribute("download", sop.pdfPath.split("/").pop());
   } else {
     sopBtn.style.display = "none";
   }
-
   if (sop.qrgPath) {
     qrgBtn.href = sop.qrgPath;
     qrgBtn.setAttribute("download", sop.qrgPath.split("/").pop());
@@ -105,34 +118,12 @@ function main() {
     qrgBtn.style.display = "none";
   }
 
-  // ---- COPY PATH BOXES ----
-  const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, "");
-
-  if (sop.pdfPath) {
-    const pdfUrl = base + sop.pdfPath.replace("./", "");
-    document.getElementById("copyPdfText").textContent = pdfUrl;
-    document.getElementById("copyPdfBtn").addEventListener("click", (e) => copyText(pdfUrl, e.currentTarget));
-  } else {
-    hide("copyPdfRow");
-  }
-
-  if (sop.qrgPath) {
-    const qrgUrl = base + sop.qrgPath.replace("./", "");
-    document.getElementById("copyQrgText").textContent = qrgUrl;
-    document.getElementById("copyQrgRow").style.display = "";
-    document.getElementById("copyQrgBtn").addEventListener("click", (e) => copyText(qrgUrl, e.currentTarget));
-  }
-
-  const pageUrl = window.location.href;
-  document.getElementById("copyLinkText").textContent = pageUrl;
-  document.getElementById("copyLinkBtn").addEventListener("click", (e) => copyText(pageUrl, e.currentTarget));
-
-  // ---- METADATA STRIP ----
+  // Metadata strip
   document.getElementById("sopOwner").textContent   = sop.owner   || "—";
   document.getElementById("sopVersion").textContent  = sop.version || "—";
   document.getElementById("sopDate").textContent     = formatDate(sop.effectiveDate);
 
-  // ---- PDF VIEWER ----
+  // PDF embed
   if (sop.pdfPath) {
     const embed = document.getElementById("sopPdfEmbed");
     embed.src = sop.pdfPath;
@@ -145,21 +136,17 @@ function main() {
     document.getElementById("sopSplit").querySelector(".sop-pdf-panel").style.display = "none";
   }
 
-  // ---- PURPOSE ----
+  // Purpose
   if (sop.purpose) {
     document.getElementById("sopPurpose").textContent = sop.purpose;
-  } else {
-    hide("purposeSection");
-  }
+  } else { hide("purposeSection"); }
 
-  // ---- SCOPE ----
+  // Scope
   if (sop.scope) {
     document.getElementById("sopScope").textContent = sop.scope;
-  } else {
-    hide("scopeSection");
-  }
+  } else { hide("scopeSection"); }
 
-  // ---- DEFINITIONS ----
+  // Definitions
   if (sop.definitions && sop.definitions.length > 0) {
     document.getElementById("sopDefinitions").innerHTML = sop.definitions.map(d => `
       <div class="definition-item">
@@ -167,11 +154,9 @@ function main() {
         <dd class="def-meaning">${escapeHtml(d.meaning)}</dd>
       </div>
     `).join("");
-  } else {
-    hide("definitionsSection");
-  }
+  } else { hide("definitionsSection"); }
 
-  // ---- ROLES ----
+  // Roles
   if (sop.roles && sop.roles.length > 0) {
     document.querySelector("#sopRoles tbody").innerHTML = sop.roles.map(r => `
       <tr>
@@ -179,18 +164,14 @@ function main() {
         <td>${escapeHtml(r.responsibility)}</td>
       </tr>
     `).join("");
-  } else {
-    hide("rolesSection");
-  }
+  } else { hide("rolesSection"); }
 
-  // ---- CADENCE ----
+  // Cadence
   if (sop.cadence) {
     document.getElementById("sopCadence").textContent = sop.cadence;
-  } else {
-    hide("cadenceSection");
-  }
+  } else { hide("cadenceSection"); }
 
-  // ---- INTERACTIVE CHECKLIST ----
+  // Interactive checklist with inline path chips
   if (sop.steps && sop.steps.length > 0) {
     const stepsEl    = document.getElementById("sopSteps");
     const storageKey = `dss-checklist-${sop.id}`;
@@ -202,10 +183,18 @@ function main() {
         <div class="step-indicator">${i + 1}</div>
         <div class="step-content">
           <div class="step-title">${escapeHtml(step.title)}</div>
-          ${step.detail ? `<div class="step-detail">${escapeHtml(step.detail)}</div>` : ""}
+          ${step.detail ? `<div class="step-detail">${renderDetailWithPaths(step.detail)}</div>` : ""}
         </div>
       </label>
     `).join("");
+
+    // Copy path chips — delegated click handler
+    stepsEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".path-copy-btn");
+      if (!btn) return;
+      e.preventDefault();
+      copyText(btn.dataset.path, btn);
+    });
 
     function loadState() {
       try { return JSON.parse(localStorage.getItem(storageKey)) || Array(total).fill(false); }
@@ -251,16 +240,12 @@ function main() {
       applyState(states);
     });
 
-  } else {
-    hide("procedureSection");
-  }
+  } else { hide("procedureSection"); }
 
-  // ---- NOTES ----
+  // Notes
   if (sop.notes && sop.notes.length > 0) {
     document.getElementById("sopNotes").innerHTML = sop.notes.map(n => `<li>${escapeHtml(n)}</li>`).join("");
-  } else {
-    hide("notesSection");
-  }
+  } else { hide("notesSection"); }
 }
 
 main();

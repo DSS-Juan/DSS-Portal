@@ -1289,34 +1289,30 @@ body {
 }
 .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Copy path boxes */
-.copy-paths { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.copy-row {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 8px 12px;
-  box-shadow: var(--shadow-xs);
+/* Inline path chips inside step detail */
+.inline-path {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 3px 6px 3px 8px;
+  margin: 4px 0; vertical-align: middle;
+  max-width: 100%; flex-wrap: wrap;
 }
-.copy-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.6px; color: var(--muted2); flex-shrink: 0; width: 30px;
+.path-text {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  word-break: break-all;
 }
-.copy-box {
-  flex: 1; font-family: var(--mono); font-size: 11px; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  background: none; border: none; outline: none; cursor: text; user-select: all;
-}
-.copy-btn {
-  flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--accent);
+.path-copy-btn {
+  flex-shrink: 0; font-size: 10px; font-weight: 600; color: var(--accent);
   background: none; border: 1px solid var(--accent-border); border-radius: 999px;
-  padding: 3px 10px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  padding: 2px 8px; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s;
 }
-.copy-btn:hover { background: var(--accent-bg); }
+.path-copy-btn:hover { background: var(--accent-bg); }
 
-/* Two-column split: PDF viewer + Checklist */
+/* Two-column split: PDF viewer (wide) + Checklist (narrow) */
 .sop-split {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 340px;
   gap: 24px;
   align-items: start;
   margin-bottom: 32px;
@@ -1324,7 +1320,7 @@ body {
 .sop-pdf-panel { min-width: 0; }
 .pdf-viewer-wrap { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
 .pdf-embed {
-  display: block; width: 100%; height: 78vh;
+  display: block; width: 100%; height: 82vh;
   border: none;
 }
 .pdf-fallback {
@@ -1335,13 +1331,9 @@ body {
   font-size: 14px; color: var(--muted);
 }
 .sop-checklist-panel {
-  position: sticky;
-  top: 24px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  position: sticky; top: 24px;
+  max-height: 90vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 0;
 }
 
 @media (max-width: 960px) {
