@@ -26,6 +26,28 @@ function hide(id) {
   if (el) el.style.display = "none";
 }
 
+async function copyText(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+  }
+  const orig = btn.textContent;
+  btn.textContent = "Copied!";
+  btn.style.color = "var(--green)";
+  btn.style.borderColor = "var(--green)";
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.color = "";
+    btn.style.borderColor = "";
+  }, 1200);
+}
+
 function main() {
   const params = new URLSearchParams(window.location.search);
   const id     = params.get("sop");
@@ -38,6 +60,8 @@ function main() {
     document.getElementById("sopDesc").textContent  = "Return to the home page and select a department to browse SOPs.";
     document.getElementById("breadcrumbSop").textContent = "Not found";
     document.getElementById("downloadBar").style.display = "none";
+    document.getElementById("copyPaths").style.display   = "none";
+    document.getElementById("sopSplit").style.display    = "none";
     return;
   }
 
@@ -47,17 +71,13 @@ function main() {
   document.title = `${sop.sopCode} · ${sop.title} · DSS Portal`;
 
   // Breadcrumb
-  const crumbDept = document.getElementById("breadcrumbDept");
-  if (dept) {
-    crumbDept.textContent = dept.name;
-  }
+  if (dept) document.getElementById("breadcrumbDept").textContent = dept.name;
   document.getElementById("breadcrumbSop").textContent = sop.sopCode;
 
   // Meta chips
   document.getElementById("metaSopCode").textContent = sop.sopCode;
   const metaDeptEl = document.getElementById("metaDept");
   metaDeptEl.innerHTML = dept ? `${dept.icon} ${escapeHtml(dept.name)}` : "—";
-
   const statusEl = document.getElementById("metaStatus");
   const status   = sop.status || "Active";
   statusEl.textContent = status;
@@ -67,7 +87,7 @@ function main() {
   document.getElementById("sopTitle").textContent = sop.title;
   document.getElementById("sopDesc").textContent  = sop.desc;
 
-  // Download buttons
+  // ---- DOWNLOAD BUTTONS ----
   const sopBtn = document.getElementById("downloadSopBtn");
   const qrgBtn = document.getElementById("downloadQrgBtn");
 
@@ -85,29 +105,63 @@ function main() {
     qrgBtn.style.display = "none";
   }
 
-  // Metadata strip
+  // ---- COPY PATH BOXES ----
+  const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, "");
+
+  if (sop.pdfPath) {
+    const pdfUrl = base + sop.pdfPath.replace("./", "");
+    document.getElementById("copyPdfText").textContent = pdfUrl;
+    document.getElementById("copyPdfBtn").addEventListener("click", (e) => copyText(pdfUrl, e.currentTarget));
+  } else {
+    hide("copyPdfRow");
+  }
+
+  if (sop.qrgPath) {
+    const qrgUrl = base + sop.qrgPath.replace("./", "");
+    document.getElementById("copyQrgText").textContent = qrgUrl;
+    document.getElementById("copyQrgRow").style.display = "";
+    document.getElementById("copyQrgBtn").addEventListener("click", (e) => copyText(qrgUrl, e.currentTarget));
+  }
+
+  const pageUrl = window.location.href;
+  document.getElementById("copyLinkText").textContent = pageUrl;
+  document.getElementById("copyLinkBtn").addEventListener("click", (e) => copyText(pageUrl, e.currentTarget));
+
+  // ---- METADATA STRIP ----
   document.getElementById("sopOwner").textContent   = sop.owner   || "—";
   document.getElementById("sopVersion").textContent  = sop.version || "—";
   document.getElementById("sopDate").textContent     = formatDate(sop.effectiveDate);
 
-  // Purpose
+  // ---- PDF VIEWER ----
+  if (sop.pdfPath) {
+    const embed = document.getElementById("sopPdfEmbed");
+    embed.src = sop.pdfPath;
+    document.getElementById("pdfFallbackBtn").href = sop.pdfPath;
+    embed.addEventListener("error", () => {
+      embed.style.display = "none";
+      document.getElementById("pdfFallback").style.display = "";
+    });
+  } else {
+    document.getElementById("sopSplit").querySelector(".sop-pdf-panel").style.display = "none";
+  }
+
+  // ---- PURPOSE ----
   if (sop.purpose) {
     document.getElementById("sopPurpose").textContent = sop.purpose;
   } else {
     hide("purposeSection");
   }
 
-  // Scope
+  // ---- SCOPE ----
   if (sop.scope) {
     document.getElementById("sopScope").textContent = sop.scope;
   } else {
     hide("scopeSection");
   }
 
-  // Definitions
+  // ---- DEFINITIONS ----
   if (sop.definitions && sop.definitions.length > 0) {
-    const defsEl = document.getElementById("sopDefinitions");
-    defsEl.innerHTML = sop.definitions.map(d => `
+    document.getElementById("sopDefinitions").innerHTML = sop.definitions.map(d => `
       <div class="definition-item">
         <dt class="def-term">${escapeHtml(d.term)}</dt>
         <dd class="def-meaning">${escapeHtml(d.meaning)}</dd>
@@ -117,10 +171,9 @@ function main() {
     hide("definitionsSection");
   }
 
-  // Roles & Responsibilities
+  // ---- ROLES ----
   if (sop.roles && sop.roles.length > 0) {
-    const tbody = document.querySelector("#sopRoles tbody");
-    tbody.innerHTML = sop.roles.map(r => `
+    document.querySelector("#sopRoles tbody").innerHTML = sop.roles.map(r => `
       <tr>
         <td><strong>${escapeHtml(r.role)}</strong></td>
         <td>${escapeHtml(r.responsibility)}</td>
@@ -130,7 +183,7 @@ function main() {
     hide("rolesSection");
   }
 
-  // Cadence
+  // ---- CADENCE ----
   if (sop.cadence) {
     document.getElementById("sopCadence").textContent = sop.cadence;
   } else {
@@ -143,7 +196,6 @@ function main() {
     const storageKey = `dss-checklist-${sop.id}`;
     const total      = sop.steps.length;
 
-    // Render steps as interactive <label> rows
     stepsEl.innerHTML = sop.steps.map((step, i) => `
       <label class="procedure-step" id="step-${i}">
         <input type="checkbox" class="step-check" data-step="${i}">
@@ -180,11 +232,9 @@ function main() {
       updateProgress(states);
     }
 
-    // Restore saved state on load
     const states = loadState();
     applyState(states);
 
-    // Toggle on checkbox change (event delegation)
     stepsEl.addEventListener("change", (e) => {
       const cb = e.target.closest(".step-check");
       if (!cb) return;
@@ -195,7 +245,6 @@ function main() {
       updateProgress(states);
     });
 
-    // Reset button
     document.getElementById("resetBtn").addEventListener("click", () => {
       localStorage.removeItem(storageKey);
       states.fill(false);
@@ -206,10 +255,9 @@ function main() {
     hide("procedureSection");
   }
 
-  // Notes & Exceptions
+  // ---- NOTES ----
   if (sop.notes && sop.notes.length > 0) {
-    const notesEl = document.getElementById("sopNotes");
-    notesEl.innerHTML = sop.notes.map(n => `<li>${escapeHtml(n)}</li>`).join("");
+    document.getElementById("sopNotes").innerHTML = sop.notes.map(n => `<li>${escapeHtml(n)}</li>`).join("");
   } else {
     hide("notesSection");
   }

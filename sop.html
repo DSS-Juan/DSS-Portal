@@ -29,7 +29,7 @@
 
   <main class="container">
 
-    <!-- SOP HERO -->
+    <!-- SOP HERO (full width) -->
     <section class="sop-hero">
 
       <!-- Breadcrumb -->
@@ -51,25 +51,44 @@
       <h2 id="sopTitle">Loading…</h2>
       <p class="desc" id="sopDesc"></p>
 
-      <!-- Download bar -->
+      <!-- Download + copy path bar -->
       <div class="download-bar" id="downloadBar">
         <a class="download-btn" id="downloadSopBtn" href="#" download>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 2v9M4 7l4 4 4-4M2 13h12"/>
           </svg>
-          Download SOP PDF
+          Download SOP
         </a>
         <a class="download-btn secondary" id="downloadQrgBtn" href="#" download>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 2v9M4 7l4 4 4-4M2 13h12"/>
           </svg>
-          Download QRG PDF
+          Download QRG
         </a>
+      </div>
+
+      <!-- Copy path boxes -->
+      <div class="copy-paths" id="copyPaths">
+        <div class="copy-row" id="copyPdfRow">
+          <span class="copy-label">PDF</span>
+          <code class="copy-box" id="copyPdfText">—</code>
+          <button class="copy-btn" id="copyPdfBtn" type="button">Copy</button>
+        </div>
+        <div class="copy-row" id="copyQrgRow" style="display:none">
+          <span class="copy-label">QRG</span>
+          <code class="copy-box" id="copyQrgText">—</code>
+          <button class="copy-btn" id="copyQrgBtn" type="button">Copy</button>
+        </div>
+        <div class="copy-row">
+          <span class="copy-label">Link</span>
+          <code class="copy-box" id="copyLinkText">—</code>
+          <button class="copy-btn" id="copyLinkBtn" type="button">Copy</button>
+        </div>
       </div>
 
     </section><!-- /sop-hero -->
 
-    <!-- METADATA STRIP -->
+    <!-- METADATA STRIP (full width) -->
     <section class="section sop-meta-section">
       <div class="sop-meta-strip">
         <div class="sop-meta-item">
@@ -87,25 +106,63 @@
       </div>
     </section>
 
-    <!-- PURPOSE -->
+    <!-- TWO-COLUMN: PDF viewer (left) + Checklist (right) -->
+    <div class="sop-split" id="sopSplit">
+
+      <!-- LEFT: embedded PDF -->
+      <div class="sop-pdf-panel">
+        <div class="section-head"><h3>SOP Document</h3></div>
+        <div class="pdf-viewer-wrap">
+          <embed id="sopPdfEmbed" class="pdf-embed" type="application/pdf" />
+          <div class="pdf-fallback" id="pdfFallback" style="display:none">
+            <p>PDF preview is not supported in this browser.</p>
+            <a class="download-btn" id="pdfFallbackBtn" href="#">Open PDF →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Checklist -->
+      <div class="sop-checklist-panel">
+        <!-- PROCEDURE -->
+        <section class="section" id="procedureSection">
+          <div class="section-head">
+            <div class="procedure-header">
+              <h3>Checklist</h3>
+              <div class="procedure-progress">
+                <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+                <span class="progress-label" id="progressLabel">0 / 0 steps</span>
+                <button class="reset-btn" id="resetBtn" type="button">Reset</button>
+              </div>
+            </div>
+          </div>
+          <div class="procedure-list" id="sopSteps"></div>
+        </section>
+
+        <!-- NOTES (shown in right panel alongside checklist) -->
+        <section class="section" id="notesSection">
+          <div class="section-head"><h3>Notes &amp; Exceptions</h3></div>
+          <ul class="sop-notes-list" id="sopNotes"></ul>
+        </section>
+      </div>
+
+    </div><!-- /sop-split -->
+
+    <!-- FULL WIDTH: supplementary reference sections -->
     <section class="section" id="purposeSection">
       <div class="section-head"><h3>Purpose</h3></div>
       <p class="sop-text" id="sopPurpose"></p>
     </section>
 
-    <!-- SCOPE -->
     <section class="section" id="scopeSection">
       <div class="section-head"><h3>Scope</h3></div>
       <p class="sop-text" id="sopScope"></p>
     </section>
 
-    <!-- DEFINITIONS -->
     <section class="section" id="definitionsSection">
       <div class="section-head"><h3>Definitions</h3></div>
       <dl class="definition-list" id="sopDefinitions"></dl>
     </section>
 
-    <!-- ROLES & RESPONSIBILITIES -->
     <section class="section" id="rolesSection">
       <div class="section-head"><h3>Roles &amp; Responsibilities</h3></div>
       <div class="table-wrap">
@@ -118,31 +175,9 @@
       </div>
     </section>
 
-    <!-- CADENCE -->
     <section class="section" id="cadenceSection">
       <div class="section-head"><h3>When / Cadence</h3></div>
       <div class="callout" id="sopCadence"></div>
-    </section>
-
-    <!-- PROCEDURE -->
-    <section class="section" id="procedureSection">
-      <div class="section-head">
-        <div class="procedure-header">
-          <h3>Procedure</h3>
-          <div class="procedure-progress">
-            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-            <span class="progress-label" id="progressLabel">0 / 0 steps</span>
-            <button class="reset-btn" id="resetBtn" type="button">Reset</button>
-          </div>
-        </div>
-      </div>
-      <div class="procedure-list" id="sopSteps"></div>
-    </section>
-
-    <!-- NOTES & EXCEPTIONS -->
-    <section class="section" id="notesSection">
-      <div class="section-head"><h3>Notes &amp; Exceptions</h3></div>
-      <ul class="sop-notes-list" id="sopNotes"></ul>
     </section>
 
   </main>
@@ -159,6 +194,6 @@
   </footer>
 
   <script src="data.js?v=5"></script>
-  <script src="sop.js?v=5"></script>
+  <script src="sop.js?v=6"></script>
 </body>
 </html>
