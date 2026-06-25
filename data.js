@@ -2093,7 +2093,7 @@ const sops = [
     "sopCode": "SOP-OPS-007",
     "title": "Stock Replenishment Process",
     "desc": "Covers the complete weekly Stock Replenishment cycle — from running the purchase extraction script through entering quantities, generating purchase returns in the automation workbook, exporting, and importing into ERPLY. Ensures replenishment quantities are accurately entered, purchase returns are generated and validated correctly, and inventory orders are successfully recorded in ERPLY.",
-    "status": "Draft — Pending review",
+    "status": "Draft",
     "version": "v1.0",
     "effectiveDate": "2026-06-01",
     "owner": "Operations Lead",

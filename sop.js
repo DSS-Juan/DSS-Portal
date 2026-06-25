@@ -93,7 +93,7 @@ function main() {
   const statusEl = document.getElementById("metaStatus");
   const status   = sop.status || "Active";
   statusEl.textContent = status;
-  statusEl.classList.add(status.toLowerCase());
+  statusEl.classList.add(status.toLowerCase().split(/[\s—–]+/)[0].replace(/[^a-z0-9-]/g, ""));
 
   document.getElementById("sopTitle").textContent = sop.title;
   document.getElementById("sopDesc").textContent  = sop.desc;
