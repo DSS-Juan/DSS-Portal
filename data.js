@@ -41,6 +41,277 @@ const departments = [
 // pdfPath / qrgPath are relative to the portal root.
 const sops = [
   {
+    "id": "auto-001-adding-automation",
+    "deptId": "automation",
+    "sopCode": "SOP-AUTO-001",
+    "title": "Adding a New Automation",
+    "desc": "Defines how to add a new automation to the DSS Automation Platform, covering all three trigger types (file drop, scheduled, and email) for both direct and AI-assisted authoring. Ensures every automation follows a consistent structure, manifest, and deployment pattern regardless of who built it.",
+    "status": "Active",
+    "version": "2.1",
+    "effectiveDate": "2026-05-01",
+    "owner": "David",
+    "pdfPath": "./sops/SOP-AUTO-001_v2.1_Adding-a-new-automation.pdf",
+    "qrgPath": null,
+    "purpose": "This SOP defines how to add a new automation to the DSS Automation Platform. Read it end-to-end before generating any files. The platform supports three trigger types — file drops, scheduled runs, and incoming emails — and is authored by both developers and team members working with AI assistants. The default input pattern for any user-facing automation is email + Power Automate + SharePoint inbox folder, covered in section 6. Following this template ensures every automation looks the same, regardless of who built it.",
+    "scope": "Applies to all automations running on the DSS Mac mini under user 'claude'. Authors include David, Juan, and any DSS team member building an automation with assistance from Claude Desktop or another AI assistant. Out of scope: cloud-hosted automations, third-party SaaS workflows, and any code that does not live in the automation-platform repository.",
+    "definitions": [
+      {
+        "term": "manifest.yml",
+        "meaning": "The required registration card for every automation. Tracks ownership, criticality, dependencies, and trigger configuration."
+      },
+      {
+        "term": "file_drop trigger",
+        "meaning": "A launchd WatchPaths trigger that fires when a file lands in a watched OneDrive folder."
+      },
+      {
+        "term": "scheduled trigger",
+        "meaning": "A launchd StartCalendarInterval trigger that fires at a configured calendar time (daily, weekly, or monthly)."
+      },
+      {
+        "term": "email trigger",
+        "meaning": "A trigger that fires when an email arrives at claude@digitalsmokesupplies.com with a recognized subject prefix. Can be implemented via Pattern A (Power Automate + SharePoint file_drop) or Pattern B (direct IMAP polling via email-watcher daemon)."
+      },
+      {
+        "term": "Pattern A",
+        "meaning": "The recommended email trigger pattern: Power Automate watches Outlook, saves attachments to a SharePoint inbox folder, OneDrive syncs the file to the mini, and a file_drop trigger fires."
+      },
+      {
+        "term": "Pattern B",
+        "meaning": "Advanced email trigger pattern using the email-watcher Python daemon that polls IMAP directly on the Mac mini. Used only when Power Automate cannot be used or sub-minute latency is required."
+      },
+      {
+        "term": "notify-teams",
+        "meaning": "Platform helper that posts an Adaptive Card to the DSS Automation Status or Review Teams channel. Accepts title, message, level (info/success/warning/error/review), and optional --file SharePoint URL."
+      },
+      {
+        "term": "secret",
+        "meaning": "Keychain wrapper helper. All entries are auto-prefixed with 'dss-'. Commands: secret get <name>, secret set <name>, secret delete <name>."
+      },
+      {
+        "term": "DSS_* path constants",
+        "meaning": "Shell environment variables exposed by common.sh that map to canonical OneDrive/SharePoint folder paths (e.g. DSS_HUB, DSS_INBOX, DSS_REVIEW, PLATFORM_LOGS, etc.)."
+      },
+      {
+        "term": "review_required",
+        "meaning": "Manifest field (true/false) that routes automation outputs to the DSS Automation > Review Teams channel for human approval before publishing to production folders."
+      },
+      {
+        "term": "subject_prefix",
+        "meaning": "Case-insensitive email subject prefix (e.g. 'SOP:', 'MEETING:') used by the email-watcher to dispatch incoming mail to the correct automation handler."
+      },
+      {
+        "term": "from_filter",
+        "meaning": "A regex of allowed sender email addresses enforced by the email-watcher before invoking a handler script. Minimum acceptable value: '@digitalsmokesupplies.com'."
+      },
+      {
+        "term": "common.sh",
+        "meaning": "Platform library script at $HOME/automation-platform/platform/lib/common.sh that must be sourced by every shell script. Provides PATH, DSS_* constants, and helper functions."
+      },
+      {
+        "term": "email-watcher",
+        "meaning": "Platform Python daemon that polls IMAP every 60 seconds for new mail at the service mailbox, matches subject prefixes, validates senders, and dispatches to the correct handler script (Pattern B)."
+      }
+    ],
+    "roles": [
+      {
+        "role": "Platform Owner (David)",
+        "responsibility": "Primary owner of the automation platform. Reviews and deploys AI-generated automations, approves exceptions to this SOP, maintains the platform README, and has final authority over all automations running on the Mac mini."
+      },
+      {
+        "role": "Backup Owner (Juan)",
+        "responsibility": "Backup platform owner. Reviews and deploys automations in David's absence. Co-approver on the DSS Automation > Review Teams channel."
+      },
+      {
+        "role": "DSS Team Member (Automation Author)",
+        "responsibility": "Any DSS team member who proposes a new automation. May author directly or use Claude Desktop to generate files following this SOP. Responsible for providing an accurate spec and submitting via the AUTOMATION: email trigger."
+      },
+      {
+        "role": "Department Lead",
+        "responsibility": "Co-approver on the DSS Automation > Review channel for automations relevant to their department. Acts on review-required files directly in SharePoint and replies in the Teams thread to mark approved or rejected."
+      },
+      {
+        "role": "Service Identity (claude@digitalsmokesupplies.com)",
+        "responsibility": "The service mailbox and Mac mini user account under which all automations run. Email triggers arrive at this address; Power Automate flows are authenticated as this account."
+      }
+    ],
+    "cadence": "As needed",
+    "steps": [
+      {
+        "title": "1. Understand the Platform Overview",
+        "detail": "The DSS Automation Platform runs on a single Mac mini logged in as user 'claude', executing multiple automations from one git repo. All automations share the same infrastructure layer: secret management via macOS Keychain (with the dss- prefix); Teams notifications via the notify-teams helper; triggers via launchd (file drops, scheduled) plus the email-watcher daemon (incoming emails); data storage via SharePoint Data Hub, OneDrive-synced to the mini; status visibility via DSS Automation > Status Teams channel; files awaiting human approval routed to DSS Automation > Review Teams channel. Reference paths: Code: /Users/claude/automation-platform/, Data: ~/dss-hub/ (symlinks into OneDrive-synced SharePoint), GitHub: https://github.com/DSS-Distro/automation-platform."
+      },
+      {
+        "title": "2. Determine Authoring Mode",
+        "detail": "Any DSS team member can propose and draft a new automation. Two authoring modes are supported: (1) Direct authoring — David or Juan write code into the repo and deploy. (2) AI-assisted authoring — a team member describes the automation to Claude Desktop, which generates files following this SOP; output is submitted to the review queue and deployed by David or Juan. All AI-generated automations must pass review before launchd loads them. When using Claude Desktop, attach this SOP PDF (or paste its contents) at the start of the conversation as context. Section 13 covers the end-to-end Claude Desktop authoring flow."
+      },
+      {
+        "title": "3. Create the Folder Structure",
+        "detail": "Every automation is a self-contained folder under automations/ with the following structure. The manifest.yml registration card is required; everything else is optional but follows the conventions below:\n\nautomations/<your-automation-name>/\n  manifest.yml            <- registration card (required)\n  bin/                    <- shell scripts\n    run.sh\n    ...\n  prompts/                <- Claude prompts as markdown (if used)\n    *.md\n  launchd/                <- one plist per trigger (file/scheduled only)\n    com.dss.automation.<name>.plist\n  README.md               <- what + why"
+      },
+      {
+        "title": "4. Create manifest.yml",
+        "detail": "Every automation must include a manifest.yml at its root. This is the registration card the platform uses to track ownership, criticality, dependencies, and trigger configuration. Required fields:\n\nname: <automation-name>\ndescription: <one sentence>\nowner: <email>\nbackup_owner: <name or email>\ncriticality: low | medium | high\ntrigger:\n  type: file_drop | scheduled | email\n  # one of:\n  watch_path: <absolute path>          # if file_drop\n  cron: \"0 8 * * 2\"                    # if scheduled\n  subject_prefix: \"SOP:\"               # if email\n  from_filter: \"@digitalsmokesupplies.com\"  # if email\nsecrets:\n  - <keychain-entry-name-without-dss-prefix>\ninputs:\n  - <path>\noutputs:\n  - <path>\nreview_required: true | false          # routes outputs to Review channel"
+      },
+      {
+        "title": "5. Choose and Configure the Trigger Type",
+        "detail": "Pick exactly one trigger type per automation. (5.1) File-drop trigger: fires when a file lands in a watched OneDrive folder; implemented via launchd WatchPaths (see section 9); use the REAL OneDrive path, not the symlinked ~/dss-hub/ path; example use: meeting transcripts dropped into Inbox, vendor reports auto-imported. (5.2) Scheduled trigger: fires at a calendar time (daily, weekly, monthly); implemented via launchd StartCalendarInterval (see section 9); example use: weekly inventory pull every Tuesday 8am, end-of-day sales summary. (5.3) Email trigger: fires when an email arrives at the service mailbox with a recognized subject prefix; two patterns — Pattern A (RECOMMENDED, Power Automate + SharePoint, see section 6) or Pattern B (advanced, email-watcher IMAP daemon, see section 10); service mailbox: claude@digitalsmokesupplies.com; example use: meeting transcripts, SOP requests, customer email forwarding, report requests. Reserved subject prefixes (case-insensitive): SOP: (generate/update an SOP), AUTOMATION: (submit new automation for review), MEETING: (process meeting transcript), REPORT: (generate a report), FORWARD: (forwarded customer email). New prefixes must be added to this SOP and to the email-watcher router config before the automation is deployed."
+      },
+      {
+        "title": "6. Set Up Power Automate Input Bridge (for Email Triggers — Pattern A)",
+        "detail": "This is the standard pattern for any automation that receives email as input. Power Automate watches the service mailbox, saves attachments to a SharePoint inbox folder, OneDrive sync brings the file to the mini, and a file_drop trigger picks it up. End-to-end flow: User sends email → claude@digitalsmokesupplies.com → Power Automate flow (subject filter) → SharePoint /06_AI_Workspace/Inbox/<automation>/ → OneDrive sync to Mac mini → launchd file_drop trigger → automation runs.\n\nInbox folder convention: each email-triggered automation owns one subfolder under Shared Documents/06_AI_Workspace/Inbox/<automation-name>/. The folder must exist in SharePoint before the Power Automate flow runs — Power Automate will not auto-create missing parent folders.\n\nPower Automate flow setup steps:\nBefore you start: confirm the destination folder exists in SharePoint; note the SharePoint Site URL; sign into make.powerautomate.com as claude@digitalsmokesupplies.com.\nStep 1 — Create the flow: Click + Create → Automated cloud flow; name it '<Automation> attachment to SharePoint'; trigger: 'When a new email arrives (V3)' (Office 365 Outlook); click Create.\nStep 2 — Configure the trigger (Show advanced options): Folder: Inbox, To: claude@digitalsmokesupplies.com, Subject Filter: <YOUR PREFIX>: (e.g. SALES MEETING:), Importance: Any, Only with Attachments: Yes, Include Attachments: Yes.\nStep 3 — Add the loop: Click + New step; choose Apply to each (Control connector); Input field: open Dynamic Content panel → click Attachments.\nStep 4 — Add the SharePoint write action INSIDE the loop using 'Send an HTTP request to SharePoint' (not 'Create file'): Site Address: https://<tenant>.sharepoint.com/sites/<site>; Method: POST; Uri: _api/web/GetFolderByServerRelativeUrl('/sites/<site>/Shared Documents/...path.../<automation>')/Files/add(url='@{items('Apply_to_each')?['Name']}', overwrite=true); Headers: Accept: application/json;odata=verbose, Content-Type: application/octet-stream; Body: Attachments Content (from dynamic content, in loop).\nStep 5 — Test: Save → Test → Manually → Test; send an email to claude@digitalsmokesupplies.com with matching subject prefix and a small attachment; within ~30 seconds the run history should show steps progressing; confirm the file appears in the SharePoint destination folder.\n\nCommon errors and fixes: 'Server relative urls must start with SPWeb.ServerRelativeUrl' — Site Address and path inside GetFolderByServerRelativeUrl don't match; Folder not found / 404 — parent folders must exist, create them in SharePoint first; Access denied — grant claude@ edit permission on the destination library; Trigger never fires — confirm Subject Filter is exact (no leading space, includes the colon) and Only with Attachments is Yes; File saves empty — use Attachments Content (per-item, inside the loop), not Attachments (the array).\n\nCloning for new automations: export the working flow, re-import under a new name, change only Subject Filter (trigger) and destination path inside the Uri."
+      },
+      {
+        "title": "7. Write the Shell Script(s)",
+        "detail": "Every shell script under bin/ must: source common.sh first (provides PATH and DSS_* path constants); use 'set -uo pipefail' for safer scripts (do NOT use 'set -e' — handle errors explicitly); use notify-teams for all status (success, failure, info, review); log to $PLATFORM_LOGS/<automation>/<task>-<date>-<ts>.log; quote all path variables (paths contain spaces because of SharePoint folder names); handle empty input gracefully — exit cleanly when there is nothing to do; for files synced via OneDrive, wait for size stability before reading; move processed inputs to processed/ subfolder to prevent re-runs.\n\nStandard template (file-drop / scheduled triggers):\n#!/usr/bin/env bash\nset -uo pipefail\nsource \"$HOME/automation-platform/platform/lib/common.sh\"\nLOG_DIR=\"$PLATFORM_LOGS/<your-automation-name>\"\nmkdir -p \"$LOG_DIR\"\n# ... your logic ...\nnotify-teams \"Title\" \"Detail message\" success\n\nFor email-triggered automations (Pattern B), the script is invoked by the email-watcher with four arguments: $1 = EMAIL_BODY (path to email body text file), $2 = ATTACHMENTS (path to attachments folder, may be empty), $3 = SENDER (sender email address), $4 = SUBJECT (full subject line). End the script with: notify-teams \"Output ready\" \"...\" review --file <sharepoint-url>"
+      },
+      {
+        "title": "8. Use Available Platform Helpers",
+        "detail": "notify-teams: posts an Adaptive Card to the DSS Automation Status or Review channel. Syntax: notify-teams <title> <message> [level] [--file <sharepoint-url>]. Levels: info | success | warning | error | review (default: info). 'review' routes the card to the Review channel for human approval. '--file' attaches a clickable SharePoint URL to the card. File references in Teams notifications must always be clickable SharePoint https://...sharepoint.com/... links — never local /Users/claude/Library/CloudStorage/... paths.\n\nsecret: Keychain wrapper (all entries auto-prefixed with 'dss-'). Commands: 'secret get <name>' (prints value), 'secret set <name>' (prompts for value, stores), 'secret delete <name>' (removes).\n\nPath constants from common.sh: DSS_HUB=~/dss-hub, DSS_MASTER_DATA=$DSS_HUB/00_Master_Data, DSS_SALES=$DSS_HUB/01_Sales, DSS_INVENTORY=$DSS_HUB/02_Inventory, DSS_PROCUREMENT=$DSS_HUB/03_Procurement, DSS_OPERATIONS_SOPS=$DSS_HUB/04_Operations_SOPs, DSS_MARKETING=$DSS_HUB/05_Marketing, DSS_AI_WORKSPACE=$DSS_HUB/06_AI_Workspace, DSS_TEMPLATES=$DSS_HUB/07_Templates, DSS_ARCHIVE=$DSS_HUB/99_Archive, DSS_INBOX=$DSS_AI_WORKSPACE/Inbox, DSS_REVIEW=$DSS_AI_WORKSPACE/Review, DSS_APPROVED=$DSS_AI_WORKSPACE/Approved, DSS_AI_LOGS=$DSS_AI_WORKSPACE/Logs, DSS_STATUS=$DSS_AI_WORKSPACE/Status, DSS_STATE=$DSS_AI_WORKSPACE/State, PLATFORM_ROOT=$HOME/automation-platform, PLATFORM_LOGS=$PLATFORM_ROOT/runtime/logs."
+      },
+      {
+        "title": "9. Configure the launchd Plist (file-drop and scheduled triggers only)",
+        "detail": "ProgramArguments must start with /bin/bash explicitly — do not rely on the script's shebang. macOS TCC needs to identify the binary holding Full Disk Access permission; going through /usr/bin/env makes responsible-process tracking ambiguous and the script will be blocked from reading OneDrive folders. Correct pattern:\n<key>ProgramArguments</key>\n<array>\n  <string>/bin/bash</string>\n  <string>/Users/claude/automation-platform/automations/<name>/bin/run.sh</string>\n</array>\n\nFor file-drop (WatchPaths): use the REAL OneDrive path, not the symlinked ~/dss-hub/ path. The real path is: /Users/claude/Library/CloudStorage/OneDrive-VapeurExpress/DSS Data Hub - <NN>_<Folder>/...\n\nFor scheduled (StartCalendarInterval):\n<key>StartCalendarInterval</key>\n<dict>\n  <key>Weekday</key><integer>2</integer>  <!-- 0=Sun, 1=Mon, ..., 6=Sat -->\n  <key>Hour</key><integer>8</integer>\n  <key>Minute</key><integer>0</integer>\n</dict>\n\nEmail-triggered automations do NOT ship a launchd plist — the email-watcher daemon owns the plist.\n\nInstall commands (file-drop / scheduled only):\ncp automations/<name>/launchd/com.dss.automation.<name>.plist ~/Library/LaunchAgents/\nlaunchctl bootout \"gui/$(id -u)/com.dss.automation.<name>\" 2>/dev/null || true\nlaunchctl bootstrap \"gui/$(id -u)\" ~/Library/LaunchAgents/com.dss.automation.<name>.plist"
+      },
+      {
+        "title": "10. Configure Direct IMAP Integration (Pattern B — advanced, email triggers only)",
+        "detail": "Use Pattern B only when Power Automate cannot be used — e.g. integrations with non-Microsoft mail systems, or when sub-minute latency is required (Power Automate has a ~30–60 second polling lag). When trigger type is email and Pattern B is in use, the launchd plist is owned by the email-watcher daemon, not the automation. The automation provides only the handler script and manifest fields.\n\nRequired manifest fields: trigger.subject_prefix (case-insensitive subject line prefix, e.g. 'SOP:'), trigger.from_filter (regex of allowed sender addresses, minimum '@digitalsmokesupplies.com'), review_required (true if outputs must be approved before being saved to production folders).\n\nHandler responsibilities: validate sender — if from_filter rejects, exit silently with a Teams warning notification including the sender address; process the email body and any attachments from the path provided in $2; write outputs to a temporary location, then post a notify-teams card to the Review channel with a SharePoint link if review is required; if no review is needed, write directly to the appropriate DSS_* folder and post to the Status channel; on success, the email-watcher moves the source email to the processed/ folder automatically — do not move it yourself.\n\nEmail-watcher dispatch logic: (1) Poll IMAP every 60 seconds for new mail in claude@digitalsmokesupplies.com. (2) Match the subject prefix (case-insensitive) against each automation's manifest. (3) Validate the sender against the matching automation's from_filter. (4) Save email body to a temp file, save attachments to $DSS_INBOX/<automation>/<message-id>/. (5) Invoke the handler with body, attachments folder, sender, subject as arguments. (6) On exit code 0, move the source email to processed/; otherwise leave for retry."
+      },
+      {
+        "title": "11. Manage the Review Workflow",
+        "detail": "Any automation producing a file for human consumption routes through the review workflow. Two Teams channels are involved: DSS Automation > Status (operational notifications — success, failure, warnings; read-only by the team) and DSS Automation > Review (files awaiting human approval; approvers: David, Juan, plus the relevant department lead).\n\nReview-required outputs (set review_required: true): SOPs and policy documents; reports going to external parties; customer-facing communications; anything modifying production master data.\n\nDirect-publish outputs (set review_required: false): internal status reports; meeting notes; backup archives and logs.\n\nUse the 'review' level on notify-teams to route to the Review channel:\nnotify-teams \"SOP draft ready for approval\" \"Generated from SOP: email from david@\" review --file https://...sharepoint.com/.../draft.pdf\n\nApprovers act on the file directly in SharePoint and reply in the Teams thread to mark approved or rejected. Approved files are moved by the platform to the appropriate DSS_* folder. Rejected files stay in Review with a comment for the author."
+      },
+      {
+        "title": "12. Configure macOS Permissions (one-time per Mac mini)",
+        "detail": "Required for any automation that reads or writes OneDrive folders: (1) Open System Settings → Privacy & Security → Full Disk Access. (2) Add /bin/bash (use Cmd+Shift+G in the file picker to type the path). (3) Toggle the entry on. Without this, launchd-spawned scripts get 'Operation not permitted' errors when accessing OneDrive-synced folders. The email-watcher daemon also requires this entry."
+      },
+      {
+        "title": "13. Author an Automation via Claude Desktop",
+        "detail": "Any DSS team member can author an automation with help from Claude Desktop. This process keeps every AI-generated automation aligned to this SOP regardless of who built it. Steps: (1) Open a new conversation in Claude Desktop. (2) Attach this SOP PDF as the first message. Add: 'Generate a new automation following this SOP. Specs below.' (3) Provide the spec: name (kebab-case), one-sentence description, trigger type (file_drop / scheduled / email) with details, inputs, outputs, required secrets, criticality (low/medium/high), and review_required (true/false). (4) Claude generates manifest.yml, bin/run.sh, launchd plist (if applicable), and README.md. (5) Save the output as a folder on your computer. (6) Email the folder (zipped) to claude@digitalsmokesupplies.com with subject 'AUTOMATION: <automation-name>'. (7) The email-watcher routes the submission into the Review channel. David or Juan reviews, then deploys."
+      },
+      {
+        "title": "14. Follow the Git Workflow",
+        "detail": "All automations live in the single automation-platform repository. Branch off main for non-trivial changes. Commit messages follow the format: <scope>: <what>. Example: meeting-automation: fix /bin/bash invocation. The runtime/ directory is gitignored — never commit logs, state, or hashes. Push to GitHub for backup."
+      },
+      {
+        "title": "15. Run the Testing Checklist",
+        "detail": "Before going live, verify each of the following: (1) Manual run from Terminal: ./bin/run.sh && echo OK. (2) For file/scheduled triggers: launchctl kickstart fires successfully. (3) For email triggers: send a test email matching subject_prefix from a from_filter address; verify handler invokes, output appears in Review or Status, source email moves to processed/. (4) Real trigger fires (file drop, scheduled time, or live email). (5) Teams Status or Review channel receives the expected notification. (6) Any file referenced in a Teams notification opens directly when clicked from the card. (7) runtime/logs/<name>/*.err.log is clean. (8) Failure scenarios (missing input, broken auth, rejected sender) produce clear error notifications. (9) Idempotency: running twice on the same input does not duplicate work."
+      },
+      {
+        "title": "16. Avoid Common Pitfalls",
+        "detail": "Known pitfalls to avoid: Using #!/usr/bin/env bash and relying on it for launchd invocation — TCC blocks file access; using ~/dss-hub/ paths in plist WatchPaths — may not trigger; not waiting for OneDrive sync stability — reading half-synced files; forgetting to quote variables — fails on paths with spaces; not handling the empty-inbox case — script crashes on first launchd-empty-trigger; storing secrets in .env files — use Keychain via the secret command instead; posting osascript notifications — invisible on a headless Mac mini, use notify-teams; posting filenames or local paths to Teams without a clickable SharePoint URL. Power Automate specific: Site Address and path inside GetFolderByServerRelativeUrl don't match; HTTP action placed outside the Apply to each loop; destination SharePoint folder doesn't exist; subject filter typo — trigger never fires; File saves empty — Body field uses the array instead of per-item Attachments Content. Email-watcher (Pattern B) specific: subject_prefix not matching exactly (typos, missing colon); missing or overly permissive from_filter — security risk."
+      },
+      {
+        "title": "17. Know Where to Look When Something Breaks",
+        "detail": "Debugging locations in order: Teams Status channel — should show what failed; Power Automate run history (make.powerautomate.com → My flows → the flow → 28-day history) — shows every trigger fire and which step failed; SharePoint inbox folder — if the file isn't there, the issue is upstream of the mini; runtime/logs/<name>/*.err.log — recent script errors on the mini; runtime/logs/email-watcher/*.log — IMAP and dispatch errors (Pattern B only); launchctl list | grep <name> — agent status (PID 0 means clean exit; non-zero means crashed); launchctl print gui/$(id -u)/<label> — full agent state; IMAP auth errors — check Keychain entry: secret get email-watcher-pass (Pattern B only)."
+      },
+      {
+        "title": "18. Owner Contacts",
+        "detail": "Platform owner: David — david@digitalsmokesupplies.com. Backup owner: Juan. Service identity: claude@digitalsmokesupplies.com (also the email trigger inbox). Mac mini access: SSH or Screen Sharing (request credentials from platform owner). GitHub repository: github.com/DSS-Distro/automation-platform (private). Teams channels: DSS Automation > Status, DSS Automation > Review."
+      },
+      {
+        "title": "19. Non-Compliance Consequences",
+        "detail": "Automations that do not follow this SOP risk being silently disabled, blocked by macOS TCC, or producing data inconsistencies that affect downstream systems. Specific consequences: storing secrets outside Keychain — removed from platform on detection; posting notifications outside standard Teams channels — treated as unsupported tool; posting file references to Teams without a clickable SharePoint URL — flagged at code review, must remediate before re-enabling; writing to data folders without using DSS_* path constants — rejected at code review; running without a manifest.yml — considered untracked and will be disabled; email-triggered with missing from_filter — treated as a security incident and disabled immediately. Any automation operating without notification visibility, or modifying production data without owner approval, will be unloaded from launchd (or de-registered from the email-watcher) and require a documented review before re-enabling."
+      },
+      {
+        "title": "20. Document and Approve Exceptions",
+        "detail": "Exceptions to this SOP must be documented and approved by the platform owner before deployment. Acceptable grounds: one-off automations for limited-duration projects (under 30 days), provided they still emit Teams notifications and are tracked in a temporary entry; external-vendor scripts that cannot be modified to source common.sh — must be wrapped by a compliant launcher script; experimental automations during platform-engineering work, isolated to a dedicated experimental/ folder and never scheduled in production launchd. All exceptions must be recorded in the platform README under an 'Exceptions' section with the date, owner, automation name, and intended end date."
+      }
+    ],
+    "notes": [
+      "Version 2.1 added Section 6 (Power Automate input bridge) as the recommended pattern for email-triggered automations. Pattern B (Python email-watcher daemon, Section 10) is reframed as advanced, retained only for non-Microsoft mail or sub-minute latency needs.",
+      "Email triggers must verify the sender. The from_filter regex in manifest.yml is enforced by the email-watcher before the handler runs. Without a valid filter, anyone could trigger your automation. The minimum acceptable filter is '@digitalsmokesupplies.com'. Missing from_filter is treated as a security incident and the automation is disabled immediately.",
+      "launchd plist ProgramArguments MUST start with /bin/bash explicitly — never rely on the script shebang (#!/usr/bin/env bash). macOS TCC requires the binary to be identified; using /usr/bin/env blocks OneDrive folder access.",
+      "WatchPaths in launchd plists must use the REAL OneDrive path (/Users/claude/Library/CloudStorage/OneDrive-VapeurExpress/DSS Data Hub - <NN>_<Folder>/...), not the symlinked ~/dss-hub/ path. Symlink resolution can interfere with launchd file-system event monitoring.",
+      "All Teams notifications that reference any file (input, output, attachment, log) must include a clickable SharePoint URL (https://...sharepoint.com/...). Plain filenames, local OneDrive-synced paths, or text-only mentions are not acceptable.",
+      "The Power Automate 'Send an HTTP request to SharePoint' action must be placed INSIDE the 'Apply to each' loop, and the Body must use 'Attachments Content' (per-item dynamic content), not the 'Attachments' array. The destination SharePoint folder must exist before the flow runs — Power Automate will not auto-create missing parent folders.",
+      "New email subject prefixes must be added to this SOP AND to the email-watcher router config before the automation is deployed. Currently reserved prefixes: SOP:, AUTOMATION:, MEETING:, REPORT:, FORWARD:",
+      "macOS Full Disk Access must be granted to /bin/bash (one-time per Mac mini) via System Settings → Privacy & Security → Full Disk Access. Without this, launchd-spawned scripts receive 'Operation not permitted' errors on OneDrive folders.",
+      "All automations must have a manifest.yml. Automations running without a manifest.yml are considered untracked and will be disabled.",
+      "The runtime/ directory is gitignored. Never commit logs, state files, or hashes to the automation-platform repository.",
+      "AI-assisted authoring flow: attach this SOP PDF to Claude Desktop, provide the spec, receive generated files, zip and email to claude@digitalsmokesupplies.com with subject 'AUTOMATION: <name>'. David or Juan reviews and deploys — AI-generated automations must pass review before launchd loads them.",
+      "CONFIDENTIAL — INTERNAL USE ONLY. Document is branded DSS Distro — Vapes & Snacks, Montreal, QC."
+    ]
+  },
+  {
+    "id": "auto-002-sop-drafting",
+    "deptId": "automation",
+    "sopCode": "SOP-AUTO-002",
+    "title": "SOP Drafting Workflow",
+    "desc": "Describes how to draft a new internal SOP using the AI-assisted workflow. The workflow takes a screen-recorded transcript and screenshots as inputs and produces a branded, editable Word document that can be reviewed, refined, and published as a final PDF.",
+    "status": "Active",
+    "version": "v1.0",
+    "effectiveDate": "2026-05-01",
+    "owner": "Operations Owner",
+    "pdfPath": "./sops/SOP-AUTO-002_SOP_drafting_workflow.pdf",
+    "qrgPath": null,
+    "purpose": "This SOP describes how to draft a new internal SOP using the AI-assisted workflow. The workflow takes a screen-recorded transcript and screenshots as inputs and produces a branded, editable Word document that can be reviewed, refined, and published as a final PDF.",
+    "scope": "Applies to anyone at DSS Distro creating a new SOP, policy, or handoff document. Out of scope: editing existing approved documents (handled directly in SharePoint with version control), and external-facing documents intended for customers or suppliers.",
+    "definitions": [
+      {
+        "term": "Transcript",
+        "meaning": "A Word document containing the auto-transcribed narration of a screen recording. Generated by iOS Voice Memos or an equivalent tool."
+      },
+      {
+        "term": "Action screenshot",
+        "meaning": "A screen capture showing a specific step in the process being documented. Named to reference the action it shows."
+      },
+      {
+        "term": "Status channel",
+        "meaning": "The DSS Automation channel in Microsoft Teams. Posts automated notifications when an SOP submission is received and when the draft is ready."
+      },
+      {
+        "term": "AI workspace",
+        "meaning": "The SharePoint folder structure where SOP drafts live during review and approval. Located in Data Hub > 06 AI Workspace."
+      }
+    ],
+    "roles": [
+      {
+        "role": "Process Owner",
+        "responsibility": "Records the screen capture and narration, prepares screenshots, and submits the package by email. Reviews and approves the generated draft."
+      },
+      {
+        "role": "Operations Owner",
+        "responsibility": "Final sign-off on any SOP affecting cross-department processes. Approves exceptions and resolves disagreements on content."
+      },
+      {
+        "role": "Automation Platform",
+        "responsibility": "Receives email submissions, generates the draft .docx, posts status notifications, watches for approval, converts approved drafts to PDF, publishes the final file."
+      }
+    ],
+    "cadence": "As needed",
+    "steps": [
+      {
+        "title": "6.1 Capture the Process",
+        "detail": "1. Identify the process to be documented and walk through it once end to end before recording the narration, to confirm you have all the access and tools you need. 2. On your iPhone, open Voice Memos and start a new recording. Voice Memos auto-transcribes on iOS 18 and later. 3. Walk through the process while narrating each step out loud. Cover what you click, why you click it, what to look for in the result, and any exceptions or judgement calls you make as you go. 4. As you complete each step, take a screenshot of the relevant screen. Name each screenshot to describe the action it shows, prefixed with a sequence number. Example: 01_open_erply_sales.png, 02_select_international_customers.png, 03_run_item_sales_by_product.png. 5. Stop the recording when the process is complete. Export the Voice Memo transcription as a Word document. 6. Save the transcript and all screenshots in a single folder on your computer."
+      },
+      {
+        "title": "6.2 Submit by Email",
+        "detail": "1. Compose a new email to claude@digitalsmokesupplies.com. 2. The subject line must start with SOP followed by the department and the topic, separated by hyphens. Example: SOP - Operations - Flavour ingredient ordering. 3. Leave the email body empty. The automation reads the transcript and screenshots only — anything in the body is ignored. 4. Attach the transcript Word document and all action screenshots. Do not zip them — attach as individual files. 5. Send the email."
+      },
+      {
+        "title": "6.3 Watch for the Receipt Notification",
+        "detail": "Within a few minutes of sending, a notification will post in the DSS Automation channel on Teams confirming the submission was received and draft generation has started. Wait for the second notification before checking SharePoint."
+      },
+      {
+        "title": "6.4 Review the Draft",
+        "detail": "1. When the second notification posts (draft ready), open the SharePoint link from the notification or navigate to Data Hub > 06 AI Workspace > Review SOP draft. 2. Open the .docx file. Read it through end to end, comparing against your original transcript and the actual process. 3. Make corrections directly in the Word document. Common edits: fixing inferred details (timelines, thresholds, role names), adding missing exceptions, tightening unclear language. 4. Verify the screenshots are placed at the correct steps and the captions accurately describe each one. 5. Save the file in place. Do not rename it — the automation tracks files by name."
+      },
+      {
+        "title": "6.5 Approve and Publish",
+        "detail": "1. Once you are satisfied with the draft, move the file from 06 AI Workspace > Review SOP draft to 06 AI Workspace > Approved > SOP drafts. 2. The automation detects the move, converts the .docx to PDF, publishes the PDF to its final location, and posts a confirmation notification in the status channel. 3. After publication, the .docx remains in the Approved > SOP drafts folder as the source of truth for any future revisions."
+      }
+    ],
+    "notes": [
+      "The full cycle from submission to published PDF takes roughly 10 to 30 minutes of active work, plus automation processing time between steps.",
+      "Prerequisites: DSS email account with access to send to claude@digitalsmokesupplies.com; Membership in the DSS Automation channel on Microsoft Teams; Access to the Data Hub SharePoint site, specifically the 06 AI Workspace folder; An iPhone with iOS 18 or later for Voice Memos with auto-transcription.",
+      "Status notifications reference — 'SOP submission received': Email and attachments arrived; draft generation has started; next step is to wait for the next notification. 'SOP draft ready': Word draft is in the Review SOP draft folder; next step is to open the file in SharePoint and review. 'SOP published': Approved Word file has been converted to PDF and published; no action required — share the published PDF link as needed. 'SOP submission failed': The automation could not process the email (common causes: missing attachments, unreadable transcript format); next step is to resubmit with corrected attachments.",
+      "Folder reference — Submission: Email to claude@digitalsmokesupplies.com. Review: Data Hub > 06 AI Workspace > Review SOP draft. Approval: Data Hub > 06 AI Workspace > Approved > SOP drafts. Final published PDF: Data Hub > 04 Operation_SOPs.",
+      "Troubleshooting — No receipt notification within 10 minutes: Check email address and attachments; if still not posted contact the Operations Owner. Draft is missing key steps: Transcript was likely incomplete or audio was unclear; rerecord and resubmit or edit directly in SharePoint. Screenshots placed at wrong steps: Automation matches screenshots by filename; rename descriptively and resubmit or move manually in the Word draft. File cannot be moved out of Review SOP draft: Confirm edit permissions on 06 AI Workspace folder; contact Operations Owner if access needed. Published PDF does not appear after approval: Confirm the file was moved (not copied) to Approved > SOP drafts — automation only triggers on a move.",
+      "Non-Compliance: Skipping the review step and approving a draft without reading it produces documents that may contain inferred, inaccurate, or incomplete information. Submitting incomplete transcripts produces drafts that are missing critical steps and may mislead the next person who follows the SOP. Bypassing the approval folder — for example, manually publishing a draft to the final location — breaks the version control chain and leaves the source of truth in an undefined state.",
+      "Exceptions: Urgent SOPs that cannot wait for the full review cycle may be drafted directly in Word using the dss-sop-policy template, with Operations Owner sign-off recorded by email. The resulting file should still be placed in the Approved > SOP drafts folder so it is captured in the published location and follows the same versioning thereafter."
+    ]
+  },
+  {
     "id": "cs-001-act-open-accounts",
     "deptId": "customer-success",
     "sopCode": "SOP-CS-001",
@@ -1817,6 +2088,87 @@ const sops = [
     ]
   },
   {
+    "id": "ops-007-stock-replenishment-process",
+    "deptId": "operations",
+    "sopCode": "SOP-OPS-007",
+    "title": "Stock replenishment process",
+    "desc": "This procedure explains how to execute the complete Stock Replenishment process, from purchase extraction through ERPLY import.",
+    "status": "Active",
+    "version": "v1.0",
+    "effectiveDate": "June 2026",
+    "owner": "Operations Lead",
+    "pdfPath": "./sops/SOP-OPS-007_stock-replenishment-process.pdf",
+    "qrgPath": null,
+    "purpose": "This procedure explains how to execute the complete Stock Replenishment process, from purchase extraction through ERPLY import. Following it ensures replenishment quantities are accurately entered, purchase returns are generated correctly, and inventory orders are successfully imported into ERPLY.",
+    "scope": "This SOP applies to any DSS employee responsible for generating Stock Replenishment purchase returns. It covers the full weekly cycle from extracting purchasing data to verifying imported purchase returns inside ERPLY. Tasks performed outside the Stock Replenishment Automation workbook — such as supplier negotiation, freight booking, or receiving — are out of scope.",
+    "definitions": [],
+    "roles": [],
+    "cadence": "Weekly",
+    "steps": [
+      {
+        "title": "Run purchase extraction",
+        "detail": "Navigate to the Stock Replenishment Automation folder and run the extraction batch script. Folder:  P:\\DSS Tools\\5. Stock Replenishment System\\5.1 Stock Replenishment Automation Run:  RunPurchaseExtraction.bat When prompted, enter yesterday’s date as the extraction date. Allow the extraction process to complete before proceeding to Step 2. Expected result — the latest purchasing and inventory information has been extracted and is ready for use in the replenishment process."
+      },
+      {
+        "title": "Open Stock Replenishment Automation",
+        "detail": "Open the automation workbook from the same folder. File:  Replenishment Automation.xlsm Once the workbook is open, select Data → Refresh All and allow every query to finish refreshing. Save the workbook when the refresh completes. Expected result — the automation workbook is updated with the latest extracted data and is ready for replenishment processing."
+      },
+      {
+        "title": "Open the weekly Stock Replenishment file",
+        "detail": "Navigate to the replenishment archive and open the file for the current cycle. Folder:  P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\ Open the weekly Stock Replenishment file inside that folder. Expected result — the weekly Stock Replenishment file is ready for quantity entry."
+      },
+      {
+        "title": "Enter replenishment quantities",
+        "detail": "Using the Stock Replenishment papers, enter all required replenishment quantities into the weekly file. Review all entries carefully before proceeding. Verify that: •\tQuantities match the paperwork. •\tNo rows were skipped. •\tNo quantities were entered in the wrong location. Save the file after completing all entries. Expected result — the weekly Stock Replenishment file contains all replenishment quantities required for the current purchasing cycle."
+      },
+      {
+        "title": "Review Add-On products",
+        "detail": "Review the Add-On products listed on the final page of the Stock Replenishment paperwork. These products are not always included automatically and must be reviewed separately. Locate each Add-On product within the weekly Stock Replenishment file. Enter the required quantities for all applicable Add-On products, then save the file. Expected result — all required Add-On products have been included in the replenishment process."
+      },
+      {
+        "title": "Refresh and validate the weekly file",
+        "detail": "After all quantities and Add-On products have been entered, perform one final refresh by selecting Data → Refresh All. Allow every query to finish loading. Review the file and confirm: •\tReplenishment quantities were entered correctly. •\tAdd-On products were included. •\tNo unexpected errors appear. •\tAll calculations update successfully. Expected result — the weekly Stock Replenishment file is finalised and ready for processing."
+      },
+      {
+        "title": "Validate province assignments",
+        "detail": "Before generating purchase returns, verify that all province assignments are correct. Review every province-specific product and confirm it is assigned to the correct province. Pay special attention to ON, QC, AB, MB, NB, PEI, and NS. Expected result — all products are assigned to the correct province."
+      },
+      {
+        "title": "Run the Extract macro",
+        "detail": "Return to Replenishment Automation.xlsm and locate the Extract button. Click Extract. When prompted, browse to and select the weekly Stock Replenishment file completed in Steps 3–7. Wait for the extraction to finish. Expected result — all replenishment quantities are loaded into the Purchase Return Generator."
+      },
+      {
+        "title": "Run the Generate macro",
+        "detail": "Once the extraction is complete, locate and run the Generate macro. Allow the macro to finish processing. This step creates the purchase return records required for ordering. Expected result — purchase returns are generated and ready for review."
+      },
+      {
+        "title": "Review generated purchase returns",
+        "detail": "Review the generated purchase returns carefully before exporting. Verify: •\tProduct quantities. •\tProduct costs. •\tSupplier assignments. •\tProvince assignments. •\tPurchase return totals. If any discrepancies are identified, correct them before proceeding. Expected result — all generated purchase returns are accurate and ready for export."
+      },
+      {
+        "title": "Compare totals",
+        "detail": "Review the Summary sheet totals and compare them against the Label-only totals generated by the automation. The totals should match. If differences exist, investigate and resolve them before continuing. Expected result — Summary totals and Label-only totals match."
+      },
+      {
+        "title": "Run the Export macro",
+        "detail": "Once validation is complete, run the Export macro. Allow the export to finish completely. The export generates the files required for the ERPLY import in Step 14. Expected result — purchase return import files are successfully created."
+      },
+      {
+        "title": "Run the Delete macro",
+        "detail": "After confirming the export completed successfully, run the Delete macro. This removes temporary processing data and prepares the workbook for the next replenishment cycle. Expected result — temporary processing data has been cleared successfully."
+      },
+      {
+        "title": "Import purchase returns into ERPLY",
+        "detail": "Navigate back to the Stock Replenishment Automation folder and run the import script. Run:  Erply_Import_PurchaseReturn.py Allow the script to complete. Monitor the console window during the import and review any warnings or errors before closing the script. Expected result — purchase returns are imported into ERPLY successfully."
+      },
+      {
+        "title": "Final verification",
+        "detail": "Log into ERPLY and verify that: •\tPurchase returns were created successfully. •\tQuantities match the generated files. •\tSuppliers are assigned correctly. •\tNo products are missing. •\tNo import errors occurred. Once verification is complete, the Stock Replenishment process is finished. Expected result — the replenishment cycle is closed and ready to repeat next week."
+      }
+    ],
+    "notes": []
+  },
+  {
     "id": "sales-001-missing-opportunities",
     "deptId": "sales",
     "sopCode": "SOP-SALES-001",
@@ -1979,275 +2331,49 @@ const sops = [
     ]
   },
   {
-    "id": "auto-001-adding-automation",
-    "deptId": "automation",
-    "sopCode": "SOP-AUTO-001",
-    "title": "Adding a New Automation",
-    "desc": "Defines how to add a new automation to the DSS Automation Platform, covering all three trigger types (file drop, scheduled, and email) for both direct and AI-assisted authoring. Ensures every automation follows a consistent structure, manifest, and deployment pattern regardless of who built it.",
-    "status": "Active",
-    "version": "2.1",
-    "effectiveDate": "2026-05-01",
-    "owner": "David",
-    "pdfPath": "./sops/SOP-AUTO-001_v2.1_Adding-a-new-automation.pdf",
-    "qrgPath": null,
-    "purpose": "This SOP defines how to add a new automation to the DSS Automation Platform. Read it end-to-end before generating any files. The platform supports three trigger types — file drops, scheduled runs, and incoming emails — and is authored by both developers and team members working with AI assistants. The default input pattern for any user-facing automation is email + Power Automate + SharePoint inbox folder, covered in section 6. Following this template ensures every automation looks the same, regardless of who built it.",
-    "scope": "Applies to all automations running on the DSS Mac mini under user 'claude'. Authors include David, Juan, and any DSS team member building an automation with assistance from Claude Desktop or another AI assistant. Out of scope: cloud-hosted automations, third-party SaaS workflows, and any code that does not live in the automation-platform repository.",
-    "definitions": [
-      {
-        "term": "manifest.yml",
-        "meaning": "The required registration card for every automation. Tracks ownership, criticality, dependencies, and trigger configuration."
-      },
-      {
-        "term": "file_drop trigger",
-        "meaning": "A launchd WatchPaths trigger that fires when a file lands in a watched OneDrive folder."
-      },
-      {
-        "term": "scheduled trigger",
-        "meaning": "A launchd StartCalendarInterval trigger that fires at a configured calendar time (daily, weekly, or monthly)."
-      },
-      {
-        "term": "email trigger",
-        "meaning": "A trigger that fires when an email arrives at claude@digitalsmokesupplies.com with a recognized subject prefix. Can be implemented via Pattern A (Power Automate + SharePoint file_drop) or Pattern B (direct IMAP polling via email-watcher daemon)."
-      },
-      {
-        "term": "Pattern A",
-        "meaning": "The recommended email trigger pattern: Power Automate watches Outlook, saves attachments to a SharePoint inbox folder, OneDrive syncs the file to the mini, and a file_drop trigger fires."
-      },
-      {
-        "term": "Pattern B",
-        "meaning": "Advanced email trigger pattern using the email-watcher Python daemon that polls IMAP directly on the Mac mini. Used only when Power Automate cannot be used or sub-minute latency is required."
-      },
-      {
-        "term": "notify-teams",
-        "meaning": "Platform helper that posts an Adaptive Card to the DSS Automation Status or Review Teams channel. Accepts title, message, level (info/success/warning/error/review), and optional --file SharePoint URL."
-      },
-      {
-        "term": "secret",
-        "meaning": "Keychain wrapper helper. All entries are auto-prefixed with 'dss-'. Commands: secret get <name>, secret set <name>, secret delete <name>."
-      },
-      {
-        "term": "DSS_* path constants",
-        "meaning": "Shell environment variables exposed by common.sh that map to canonical OneDrive/SharePoint folder paths (e.g. DSS_HUB, DSS_INBOX, DSS_REVIEW, PLATFORM_LOGS, etc.)."
-      },
-      {
-        "term": "review_required",
-        "meaning": "Manifest field (true/false) that routes automation outputs to the DSS Automation > Review Teams channel for human approval before publishing to production folders."
-      },
-      {
-        "term": "subject_prefix",
-        "meaning": "Case-insensitive email subject prefix (e.g. 'SOP:', 'MEETING:') used by the email-watcher to dispatch incoming mail to the correct automation handler."
-      },
-      {
-        "term": "from_filter",
-        "meaning": "A regex of allowed sender email addresses enforced by the email-watcher before invoking a handler script. Minimum acceptable value: '@digitalsmokesupplies.com'."
-      },
-      {
-        "term": "common.sh",
-        "meaning": "Platform library script at $HOME/automation-platform/platform/lib/common.sh that must be sourced by every shell script. Provides PATH, DSS_* constants, and helper functions."
-      },
-      {
-        "term": "email-watcher",
-        "meaning": "Platform Python daemon that polls IMAP every 60 seconds for new mail at the service mailbox, matches subject prefixes, validates senders, and dispatches to the correct handler script (Pattern B)."
-      }
-    ],
-    "roles": [
-      {
-        "role": "Platform Owner (David)",
-        "responsibility": "Primary owner of the automation platform. Reviews and deploys AI-generated automations, approves exceptions to this SOP, maintains the platform README, and has final authority over all automations running on the Mac mini."
-      },
-      {
-        "role": "Backup Owner (Juan)",
-        "responsibility": "Backup platform owner. Reviews and deploys automations in David's absence. Co-approver on the DSS Automation > Review Teams channel."
-      },
-      {
-        "role": "DSS Team Member (Automation Author)",
-        "responsibility": "Any DSS team member who proposes a new automation. May author directly or use Claude Desktop to generate files following this SOP. Responsible for providing an accurate spec and submitting via the AUTOMATION: email trigger."
-      },
-      {
-        "role": "Department Lead",
-        "responsibility": "Co-approver on the DSS Automation > Review channel for automations relevant to their department. Acts on review-required files directly in SharePoint and replies in the Teams thread to mark approved or rejected."
-      },
-      {
-        "role": "Service Identity (claude@digitalsmokesupplies.com)",
-        "responsibility": "The service mailbox and Mac mini user account under which all automations run. Email triggers arrive at this address; Power Automate flows are authenticated as this account."
-      }
-    ],
-    "cadence": "As needed",
-    "steps": [
-      {
-        "title": "1. Understand the Platform Overview",
-        "detail": "The DSS Automation Platform runs on a single Mac mini logged in as user 'claude', executing multiple automations from one git repo. All automations share the same infrastructure layer: secret management via macOS Keychain (with the dss- prefix); Teams notifications via the notify-teams helper; triggers via launchd (file drops, scheduled) plus the email-watcher daemon (incoming emails); data storage via SharePoint Data Hub, OneDrive-synced to the mini; status visibility via DSS Automation > Status Teams channel; files awaiting human approval routed to DSS Automation > Review Teams channel. Reference paths: Code: /Users/claude/automation-platform/, Data: ~/dss-hub/ (symlinks into OneDrive-synced SharePoint), GitHub: https://github.com/DSS-Distro/automation-platform."
-      },
-      {
-        "title": "2. Determine Authoring Mode",
-        "detail": "Any DSS team member can propose and draft a new automation. Two authoring modes are supported: (1) Direct authoring — David or Juan write code into the repo and deploy. (2) AI-assisted authoring — a team member describes the automation to Claude Desktop, which generates files following this SOP; output is submitted to the review queue and deployed by David or Juan. All AI-generated automations must pass review before launchd loads them. When using Claude Desktop, attach this SOP PDF (or paste its contents) at the start of the conversation as context. Section 13 covers the end-to-end Claude Desktop authoring flow."
-      },
-      {
-        "title": "3. Create the Folder Structure",
-        "detail": "Every automation is a self-contained folder under automations/ with the following structure. The manifest.yml registration card is required; everything else is optional but follows the conventions below:\n\nautomations/<your-automation-name>/\n  manifest.yml            <- registration card (required)\n  bin/                    <- shell scripts\n    run.sh\n    ...\n  prompts/                <- Claude prompts as markdown (if used)\n    *.md\n  launchd/                <- one plist per trigger (file/scheduled only)\n    com.dss.automation.<name>.plist\n  README.md               <- what + why"
-      },
-      {
-        "title": "4. Create manifest.yml",
-        "detail": "Every automation must include a manifest.yml at its root. This is the registration card the platform uses to track ownership, criticality, dependencies, and trigger configuration. Required fields:\n\nname: <automation-name>\ndescription: <one sentence>\nowner: <email>\nbackup_owner: <name or email>\ncriticality: low | medium | high\ntrigger:\n  type: file_drop | scheduled | email\n  # one of:\n  watch_path: <absolute path>          # if file_drop\n  cron: \"0 8 * * 2\"                    # if scheduled\n  subject_prefix: \"SOP:\"               # if email\n  from_filter: \"@digitalsmokesupplies.com\"  # if email\nsecrets:\n  - <keychain-entry-name-without-dss-prefix>\ninputs:\n  - <path>\noutputs:\n  - <path>\nreview_required: true | false          # routes outputs to Review channel"
-      },
-      {
-        "title": "5. Choose and Configure the Trigger Type",
-        "detail": "Pick exactly one trigger type per automation. (5.1) File-drop trigger: fires when a file lands in a watched OneDrive folder; implemented via launchd WatchPaths (see section 9); use the REAL OneDrive path, not the symlinked ~/dss-hub/ path; example use: meeting transcripts dropped into Inbox, vendor reports auto-imported. (5.2) Scheduled trigger: fires at a calendar time (daily, weekly, monthly); implemented via launchd StartCalendarInterval (see section 9); example use: weekly inventory pull every Tuesday 8am, end-of-day sales summary. (5.3) Email trigger: fires when an email arrives at the service mailbox with a recognized subject prefix; two patterns — Pattern A (RECOMMENDED, Power Automate + SharePoint, see section 6) or Pattern B (advanced, email-watcher IMAP daemon, see section 10); service mailbox: claude@digitalsmokesupplies.com; example use: meeting transcripts, SOP requests, customer email forwarding, report requests. Reserved subject prefixes (case-insensitive): SOP: (generate/update an SOP), AUTOMATION: (submit new automation for review), MEETING: (process meeting transcript), REPORT: (generate a report), FORWARD: (forwarded customer email). New prefixes must be added to this SOP and to the email-watcher router config before the automation is deployed."
-      },
-      {
-        "title": "6. Set Up Power Automate Input Bridge (for Email Triggers — Pattern A)",
-        "detail": "This is the standard pattern for any automation that receives email as input. Power Automate watches the service mailbox, saves attachments to a SharePoint inbox folder, OneDrive sync brings the file to the mini, and a file_drop trigger picks it up. End-to-end flow: User sends email → claude@digitalsmokesupplies.com → Power Automate flow (subject filter) → SharePoint /06_AI_Workspace/Inbox/<automation>/ → OneDrive sync to Mac mini → launchd file_drop trigger → automation runs.\n\nInbox folder convention: each email-triggered automation owns one subfolder under Shared Documents/06_AI_Workspace/Inbox/<automation-name>/. The folder must exist in SharePoint before the Power Automate flow runs — Power Automate will not auto-create missing parent folders.\n\nPower Automate flow setup steps:\nBefore you start: confirm the destination folder exists in SharePoint; note the SharePoint Site URL; sign into make.powerautomate.com as claude@digitalsmokesupplies.com.\nStep 1 — Create the flow: Click + Create → Automated cloud flow; name it '<Automation> attachment to SharePoint'; trigger: 'When a new email arrives (V3)' (Office 365 Outlook); click Create.\nStep 2 — Configure the trigger (Show advanced options): Folder: Inbox, To: claude@digitalsmokesupplies.com, Subject Filter: <YOUR PREFIX>: (e.g. SALES MEETING:), Importance: Any, Only with Attachments: Yes, Include Attachments: Yes.\nStep 3 — Add the loop: Click + New step; choose Apply to each (Control connector); Input field: open Dynamic Content panel → click Attachments.\nStep 4 — Add the SharePoint write action INSIDE the loop using 'Send an HTTP request to SharePoint' (not 'Create file'): Site Address: https://<tenant>.sharepoint.com/sites/<site>; Method: POST; Uri: _api/web/GetFolderByServerRelativeUrl('/sites/<site>/Shared Documents/...path.../<automation>')/Files/add(url='@{items('Apply_to_each')?['Name']}', overwrite=true); Headers: Accept: application/json;odata=verbose, Content-Type: application/octet-stream; Body: Attachments Content (from dynamic content, in loop).\nStep 5 — Test: Save → Test → Manually → Test; send an email to claude@digitalsmokesupplies.com with matching subject prefix and a small attachment; within ~30 seconds the run history should show steps progressing; confirm the file appears in the SharePoint destination folder.\n\nCommon errors and fixes: 'Server relative urls must start with SPWeb.ServerRelativeUrl' — Site Address and path inside GetFolderByServerRelativeUrl don't match; Folder not found / 404 — parent folders must exist, create them in SharePoint first; Access denied — grant claude@ edit permission on the destination library; Trigger never fires — confirm Subject Filter is exact (no leading space, includes the colon) and Only with Attachments is Yes; File saves empty — use Attachments Content (per-item, inside the loop), not Attachments (the array).\n\nCloning for new automations: export the working flow, re-import under a new name, change only Subject Filter (trigger) and destination path inside the Uri."
-      },
-      {
-        "title": "7. Write the Shell Script(s)",
-        "detail": "Every shell script under bin/ must: source common.sh first (provides PATH and DSS_* path constants); use 'set -uo pipefail' for safer scripts (do NOT use 'set -e' — handle errors explicitly); use notify-teams for all status (success, failure, info, review); log to $PLATFORM_LOGS/<automation>/<task>-<date>-<ts>.log; quote all path variables (paths contain spaces because of SharePoint folder names); handle empty input gracefully — exit cleanly when there is nothing to do; for files synced via OneDrive, wait for size stability before reading; move processed inputs to processed/ subfolder to prevent re-runs.\n\nStandard template (file-drop / scheduled triggers):\n#!/usr/bin/env bash\nset -uo pipefail\nsource \"$HOME/automation-platform/platform/lib/common.sh\"\nLOG_DIR=\"$PLATFORM_LOGS/<your-automation-name>\"\nmkdir -p \"$LOG_DIR\"\n# ... your logic ...\nnotify-teams \"Title\" \"Detail message\" success\n\nFor email-triggered automations (Pattern B), the script is invoked by the email-watcher with four arguments: $1 = EMAIL_BODY (path to email body text file), $2 = ATTACHMENTS (path to attachments folder, may be empty), $3 = SENDER (sender email address), $4 = SUBJECT (full subject line). End the script with: notify-teams \"Output ready\" \"...\" review --file <sharepoint-url>"
-      },
-      {
-        "title": "8. Use Available Platform Helpers",
-        "detail": "notify-teams: posts an Adaptive Card to the DSS Automation Status or Review channel. Syntax: notify-teams <title> <message> [level] [--file <sharepoint-url>]. Levels: info | success | warning | error | review (default: info). 'review' routes the card to the Review channel for human approval. '--file' attaches a clickable SharePoint URL to the card. File references in Teams notifications must always be clickable SharePoint https://...sharepoint.com/... links — never local /Users/claude/Library/CloudStorage/... paths.\n\nsecret: Keychain wrapper (all entries auto-prefixed with 'dss-'). Commands: 'secret get <name>' (prints value), 'secret set <name>' (prompts for value, stores), 'secret delete <name>' (removes).\n\nPath constants from common.sh: DSS_HUB=~/dss-hub, DSS_MASTER_DATA=$DSS_HUB/00_Master_Data, DSS_SALES=$DSS_HUB/01_Sales, DSS_INVENTORY=$DSS_HUB/02_Inventory, DSS_PROCUREMENT=$DSS_HUB/03_Procurement, DSS_OPERATIONS_SOPS=$DSS_HUB/04_Operations_SOPs, DSS_MARKETING=$DSS_HUB/05_Marketing, DSS_AI_WORKSPACE=$DSS_HUB/06_AI_Workspace, DSS_TEMPLATES=$DSS_HUB/07_Templates, DSS_ARCHIVE=$DSS_HUB/99_Archive, DSS_INBOX=$DSS_AI_WORKSPACE/Inbox, DSS_REVIEW=$DSS_AI_WORKSPACE/Review, DSS_APPROVED=$DSS_AI_WORKSPACE/Approved, DSS_AI_LOGS=$DSS_AI_WORKSPACE/Logs, DSS_STATUS=$DSS_AI_WORKSPACE/Status, DSS_STATE=$DSS_AI_WORKSPACE/State, PLATFORM_ROOT=$HOME/automation-platform, PLATFORM_LOGS=$PLATFORM_ROOT/runtime/logs."
-      },
-      {
-        "title": "9. Configure the launchd Plist (file-drop and scheduled triggers only)",
-        "detail": "ProgramArguments must start with /bin/bash explicitly — do not rely on the script's shebang. macOS TCC needs to identify the binary holding Full Disk Access permission; going through /usr/bin/env makes responsible-process tracking ambiguous and the script will be blocked from reading OneDrive folders. Correct pattern:\n<key>ProgramArguments</key>\n<array>\n  <string>/bin/bash</string>\n  <string>/Users/claude/automation-platform/automations/<name>/bin/run.sh</string>\n</array>\n\nFor file-drop (WatchPaths): use the REAL OneDrive path, not the symlinked ~/dss-hub/ path. The real path is: /Users/claude/Library/CloudStorage/OneDrive-VapeurExpress/DSS Data Hub - <NN>_<Folder>/...\n\nFor scheduled (StartCalendarInterval):\n<key>StartCalendarInterval</key>\n<dict>\n  <key>Weekday</key><integer>2</integer>  <!-- 0=Sun, 1=Mon, ..., 6=Sat -->\n  <key>Hour</key><integer>8</integer>\n  <key>Minute</key><integer>0</integer>\n</dict>\n\nEmail-triggered automations do NOT ship a launchd plist — the email-watcher daemon owns the plist.\n\nInstall commands (file-drop / scheduled only):\ncp automations/<name>/launchd/com.dss.automation.<name>.plist ~/Library/LaunchAgents/\nlaunchctl bootout \"gui/$(id -u)/com.dss.automation.<name>\" 2>/dev/null || true\nlaunchctl bootstrap \"gui/$(id -u)\" ~/Library/LaunchAgents/com.dss.automation.<name>.plist"
-      },
-      {
-        "title": "10. Configure Direct IMAP Integration (Pattern B — advanced, email triggers only)",
-        "detail": "Use Pattern B only when Power Automate cannot be used — e.g. integrations with non-Microsoft mail systems, or when sub-minute latency is required (Power Automate has a ~30–60 second polling lag). When trigger type is email and Pattern B is in use, the launchd plist is owned by the email-watcher daemon, not the automation. The automation provides only the handler script and manifest fields.\n\nRequired manifest fields: trigger.subject_prefix (case-insensitive subject line prefix, e.g. 'SOP:'), trigger.from_filter (regex of allowed sender addresses, minimum '@digitalsmokesupplies.com'), review_required (true if outputs must be approved before being saved to production folders).\n\nHandler responsibilities: validate sender — if from_filter rejects, exit silently with a Teams warning notification including the sender address; process the email body and any attachments from the path provided in $2; write outputs to a temporary location, then post a notify-teams card to the Review channel with a SharePoint link if review is required; if no review is needed, write directly to the appropriate DSS_* folder and post to the Status channel; on success, the email-watcher moves the source email to the processed/ folder automatically — do not move it yourself.\n\nEmail-watcher dispatch logic: (1) Poll IMAP every 60 seconds for new mail in claude@digitalsmokesupplies.com. (2) Match the subject prefix (case-insensitive) against each automation's manifest. (3) Validate the sender against the matching automation's from_filter. (4) Save email body to a temp file, save attachments to $DSS_INBOX/<automation>/<message-id>/. (5) Invoke the handler with body, attachments folder, sender, subject as arguments. (6) On exit code 0, move the source email to processed/; otherwise leave for retry."
-      },
-      {
-        "title": "11. Manage the Review Workflow",
-        "detail": "Any automation producing a file for human consumption routes through the review workflow. Two Teams channels are involved: DSS Automation > Status (operational notifications — success, failure, warnings; read-only by the team) and DSS Automation > Review (files awaiting human approval; approvers: David, Juan, plus the relevant department lead).\n\nReview-required outputs (set review_required: true): SOPs and policy documents; reports going to external parties; customer-facing communications; anything modifying production master data.\n\nDirect-publish outputs (set review_required: false): internal status reports; meeting notes; backup archives and logs.\n\nUse the 'review' level on notify-teams to route to the Review channel:\nnotify-teams \"SOP draft ready for approval\" \"Generated from SOP: email from david@\" review --file https://...sharepoint.com/.../draft.pdf\n\nApprovers act on the file directly in SharePoint and reply in the Teams thread to mark approved or rejected. Approved files are moved by the platform to the appropriate DSS_* folder. Rejected files stay in Review with a comment for the author."
-      },
-      {
-        "title": "12. Configure macOS Permissions (one-time per Mac mini)",
-        "detail": "Required for any automation that reads or writes OneDrive folders: (1) Open System Settings → Privacy & Security → Full Disk Access. (2) Add /bin/bash (use Cmd+Shift+G in the file picker to type the path). (3) Toggle the entry on. Without this, launchd-spawned scripts get 'Operation not permitted' errors when accessing OneDrive-synced folders. The email-watcher daemon also requires this entry."
-      },
-      {
-        "title": "13. Author an Automation via Claude Desktop",
-        "detail": "Any DSS team member can author an automation with help from Claude Desktop. This process keeps every AI-generated automation aligned to this SOP regardless of who built it. Steps: (1) Open a new conversation in Claude Desktop. (2) Attach this SOP PDF as the first message. Add: 'Generate a new automation following this SOP. Specs below.' (3) Provide the spec: name (kebab-case), one-sentence description, trigger type (file_drop / scheduled / email) with details, inputs, outputs, required secrets, criticality (low/medium/high), and review_required (true/false). (4) Claude generates manifest.yml, bin/run.sh, launchd plist (if applicable), and README.md. (5) Save the output as a folder on your computer. (6) Email the folder (zipped) to claude@digitalsmokesupplies.com with subject 'AUTOMATION: <automation-name>'. (7) The email-watcher routes the submission into the Review channel. David or Juan reviews, then deploys."
-      },
-      {
-        "title": "14. Follow the Git Workflow",
-        "detail": "All automations live in the single automation-platform repository. Branch off main for non-trivial changes. Commit messages follow the format: <scope>: <what>. Example: meeting-automation: fix /bin/bash invocation. The runtime/ directory is gitignored — never commit logs, state, or hashes. Push to GitHub for backup."
-      },
-      {
-        "title": "15. Run the Testing Checklist",
-        "detail": "Before going live, verify each of the following: (1) Manual run from Terminal: ./bin/run.sh && echo OK. (2) For file/scheduled triggers: launchctl kickstart fires successfully. (3) For email triggers: send a test email matching subject_prefix from a from_filter address; verify handler invokes, output appears in Review or Status, source email moves to processed/. (4) Real trigger fires (file drop, scheduled time, or live email). (5) Teams Status or Review channel receives the expected notification. (6) Any file referenced in a Teams notification opens directly when clicked from the card. (7) runtime/logs/<name>/*.err.log is clean. (8) Failure scenarios (missing input, broken auth, rejected sender) produce clear error notifications. (9) Idempotency: running twice on the same input does not duplicate work."
-      },
-      {
-        "title": "16. Avoid Common Pitfalls",
-        "detail": "Known pitfalls to avoid: Using #!/usr/bin/env bash and relying on it for launchd invocation — TCC blocks file access; using ~/dss-hub/ paths in plist WatchPaths — may not trigger; not waiting for OneDrive sync stability — reading half-synced files; forgetting to quote variables — fails on paths with spaces; not handling the empty-inbox case — script crashes on first launchd-empty-trigger; storing secrets in .env files — use Keychain via the secret command instead; posting osascript notifications — invisible on a headless Mac mini, use notify-teams; posting filenames or local paths to Teams without a clickable SharePoint URL. Power Automate specific: Site Address and path inside GetFolderByServerRelativeUrl don't match; HTTP action placed outside the Apply to each loop; destination SharePoint folder doesn't exist; subject filter typo — trigger never fires; File saves empty — Body field uses the array instead of per-item Attachments Content. Email-watcher (Pattern B) specific: subject_prefix not matching exactly (typos, missing colon); missing or overly permissive from_filter — security risk."
-      },
-      {
-        "title": "17. Know Where to Look When Something Breaks",
-        "detail": "Debugging locations in order: Teams Status channel — should show what failed; Power Automate run history (make.powerautomate.com → My flows → the flow → 28-day history) — shows every trigger fire and which step failed; SharePoint inbox folder — if the file isn't there, the issue is upstream of the mini; runtime/logs/<name>/*.err.log — recent script errors on the mini; runtime/logs/email-watcher/*.log — IMAP and dispatch errors (Pattern B only); launchctl list | grep <name> — agent status (PID 0 means clean exit; non-zero means crashed); launchctl print gui/$(id -u)/<label> — full agent state; IMAP auth errors — check Keychain entry: secret get email-watcher-pass (Pattern B only)."
-      },
-      {
-        "title": "18. Owner Contacts",
-        "detail": "Platform owner: David — david@digitalsmokesupplies.com. Backup owner: Juan. Service identity: claude@digitalsmokesupplies.com (also the email trigger inbox). Mac mini access: SSH or Screen Sharing (request credentials from platform owner). GitHub repository: github.com/DSS-Distro/automation-platform (private). Teams channels: DSS Automation > Status, DSS Automation > Review."
-      },
-      {
-        "title": "19. Non-Compliance Consequences",
-        "detail": "Automations that do not follow this SOP risk being silently disabled, blocked by macOS TCC, or producing data inconsistencies that affect downstream systems. Specific consequences: storing secrets outside Keychain — removed from platform on detection; posting notifications outside standard Teams channels — treated as unsupported tool; posting file references to Teams without a clickable SharePoint URL — flagged at code review, must remediate before re-enabling; writing to data folders without using DSS_* path constants — rejected at code review; running without a manifest.yml — considered untracked and will be disabled; email-triggered with missing from_filter — treated as a security incident and disabled immediately. Any automation operating without notification visibility, or modifying production data without owner approval, will be unloaded from launchd (or de-registered from the email-watcher) and require a documented review before re-enabling."
-      },
-      {
-        "title": "20. Document and Approve Exceptions",
-        "detail": "Exceptions to this SOP must be documented and approved by the platform owner before deployment. Acceptable grounds: one-off automations for limited-duration projects (under 30 days), provided they still emit Teams notifications and are tracked in a temporary entry; external-vendor scripts that cannot be modified to source common.sh — must be wrapped by a compliant launcher script; experimental automations during platform-engineering work, isolated to a dedicated experimental/ folder and never scheduled in production launchd. All exceptions must be recorded in the platform README under an 'Exceptions' section with the date, owner, automation name, and intended end date."
-      }
-    ],
-    "notes": [
-      "Version 2.1 added Section 6 (Power Automate input bridge) as the recommended pattern for email-triggered automations. Pattern B (Python email-watcher daemon, Section 10) is reframed as advanced, retained only for non-Microsoft mail or sub-minute latency needs.",
-      "Email triggers must verify the sender. The from_filter regex in manifest.yml is enforced by the email-watcher before the handler runs. Without a valid filter, anyone could trigger your automation. The minimum acceptable filter is '@digitalsmokesupplies.com'. Missing from_filter is treated as a security incident and the automation is disabled immediately.",
-      "launchd plist ProgramArguments MUST start with /bin/bash explicitly — never rely on the script shebang (#!/usr/bin/env bash). macOS TCC requires the binary to be identified; using /usr/bin/env blocks OneDrive folder access.",
-      "WatchPaths in launchd plists must use the REAL OneDrive path (/Users/claude/Library/CloudStorage/OneDrive-VapeurExpress/DSS Data Hub - <NN>_<Folder>/...), not the symlinked ~/dss-hub/ path. Symlink resolution can interfere with launchd file-system event monitoring.",
-      "All Teams notifications that reference any file (input, output, attachment, log) must include a clickable SharePoint URL (https://...sharepoint.com/...). Plain filenames, local OneDrive-synced paths, or text-only mentions are not acceptable.",
-      "The Power Automate 'Send an HTTP request to SharePoint' action must be placed INSIDE the 'Apply to each' loop, and the Body must use 'Attachments Content' (per-item dynamic content), not the 'Attachments' array. The destination SharePoint folder must exist before the flow runs — Power Automate will not auto-create missing parent folders.",
-      "New email subject prefixes must be added to this SOP AND to the email-watcher router config before the automation is deployed. Currently reserved prefixes: SOP:, AUTOMATION:, MEETING:, REPORT:, FORWARD:",
-      "macOS Full Disk Access must be granted to /bin/bash (one-time per Mac mini) via System Settings → Privacy & Security → Full Disk Access. Without this, launchd-spawned scripts receive 'Operation not permitted' errors on OneDrive folders.",
-      "All automations must have a manifest.yml. Automations running without a manifest.yml are considered untracked and will be disabled.",
-      "The runtime/ directory is gitignored. Never commit logs, state files, or hashes to the automation-platform repository.",
-      "AI-assisted authoring flow: attach this SOP PDF to Claude Desktop, provide the spec, receive generated files, zip and email to claude@digitalsmokesupplies.com with subject 'AUTOMATION: <name>'. David or Juan reviews and deploys — AI-generated automations must pass review before launchd loads them.",
-      "CONFIDENTIAL — INTERNAL USE ONLY. Document is branded DSS Distro — Vapes & Snacks, Montreal, QC."
-    ]
-  },
-  {
-    "id": "auto-002-sop-drafting",
-    "deptId": "automation",
-    "sopCode": "SOP-AUTO-002",
-    "title": "SOP Drafting Workflow",
-    "desc": "Describes how to draft a new internal SOP using the AI-assisted workflow. The workflow takes a screen-recorded transcript and screenshots as inputs and produces a branded, editable Word document that can be reviewed, refined, and published as a final PDF.",
+    "id": "sales-003-update-sales-dashboards",
+    "deptId": "sales",
+    "sopCode": "SOP-SALES-003",
+    "title": "Update sales dashboards (DSS / FLVRS / ACT)",
+    "desc": "This procedure ensures every DSS sales reporting surface — DSS Sales, FLVRS Sales, ACT Dashboard, Missing Opportunities, Back In Stock, and the Power BI dashboard — is refreshed from the same source extract on a consistent cadence.",
     "status": "Active",
     "version": "v1.0",
-    "effectiveDate": "2026-05-01",
-    "owner": "Operations Owner",
-    "pdfPath": "./sops/SOP-AUTO-002_SOP_drafting_workflow.pdf",
-    "qrgPath": null,
-    "purpose": "This SOP describes how to draft a new internal SOP using the AI-assisted workflow. The workflow takes a screen-recorded transcript and screenshots as inputs and produces a branded, editable Word document that can be reviewed, refined, and published as a final PDF.",
-    "scope": "Applies to anyone at DSS Distro creating a new SOP, policy, or handoff document. Out of scope: editing existing approved documents (handled directly in SharePoint with version control), and external-facing documents intended for customers or suppliers.",
-    "definitions": [
-      {
-        "term": "Transcript",
-        "meaning": "A Word document containing the auto-transcribed narration of a screen recording. Generated by iOS Voice Memos or an equivalent tool."
-      },
-      {
-        "term": "Action screenshot",
-        "meaning": "A screen capture showing a specific step in the process being documented. Named to reference the action it shows."
-      },
-      {
-        "term": "Status channel",
-        "meaning": "The DSS Automation channel in Microsoft Teams. Posts automated notifications when an SOP submission is received and when the draft is ready."
-      },
-      {
-        "term": "AI workspace",
-        "meaning": "The SharePoint folder structure where SOP drafts live during review and approval. Located in Data Hub > 06 AI Workspace."
-      }
-    ],
-    "roles": [
-      {
-        "role": "Process Owner",
-        "responsibility": "Records the screen capture and narration, prepares screenshots, and submits the package by email. Reviews and approves the generated draft."
-      },
-      {
-        "role": "Operations Owner",
-        "responsibility": "Final sign-off on any SOP affecting cross-department processes. Approves exceptions and resolves disagreements on content."
-      },
-      {
-        "role": "Automation Platform",
-        "responsibility": "Receives email submissions, generates the draft .docx, posts status notifications, watches for approval, converts approved drafts to PDF, publishes the final file."
-      }
-    ],
-    "cadence": "As needed",
+    "effectiveDate": "June 2026",
+    "owner": "Sales Reporting Analyst",
+    "pdfPath": "./sops/SOP-SALES-003_update-sales-dashboards.pdf",
+    "qrgPath": "./sops/QRG-SALES-003_update-sales-dashboards.pdf",
+    "purpose": "This procedure ensures every DSS sales reporting surface — DSS Sales, FLVRS Sales, ACT Dashboard, Missing Opportunities, Back In Stock, and the Power BI dashboard — is refreshed from the same source extract on a consistent cadence. Running the steps in order keeps the numbers across dashboards reconciled and the published Power BI report in sync with the underlying Excel automations.",
+    "scope": "This SOP applies to any DSS employee responsible for maintaining sales reporting, business intelligence, or Power BI dashboards. Out of scope: designing new dashboard visuals, modifying the underlying Power BI semantic model, and creating new automation macros — those changes go through the BI lead before any refresh run.",
+    "definitions": [],
+    "roles": [],
+    "cadence": "Weekly",
     "steps": [
       {
-        "title": "6.1 Capture the Process",
-        "detail": "1. Identify the process to be documented and walk through it once end to end before recording the narration, to confirm you have all the access and tools you need. 2. On your iPhone, open Voice Memos and start a new recording. Voice Memos auto-transcribes on iOS 18 and later. 3. Walk through the process while narrating each step out loud. Cover what you click, why you click it, what to look for in the result, and any exceptions or judgement calls you make as you go. 4. As you complete each step, take a screenshot of the relevant screen. Name each screenshot to describe the action it shows, prefixed with a sequence number. Example: 01_open_erply_sales.png, 02_select_international_customers.png, 03_run_item_sales_by_product.png. 5. Stop the recording when the process is complete. Export the Voice Memo transcription as a Word document. 6. Save the transcript and all screenshots in a single folder on your computer."
+        "title": "Run sales data extraction",
+        "detail": "Navigate to the sales report automation folder and launch the extraction batch file. Folder:  P:\\- DSS Tools\\3. Sales & Reporting\\3.1 Sales Report Automation Run:  Run_Sales_Reports_Data_Extraction.bat Wait for the batch window to complete before continuing. The downstream macros assume the extract has finished."
       },
       {
-        "title": "6.2 Submit by Email",
-        "detail": "1. Compose a new email to claude@digitalsmokesupplies.com. 2. The subject line must start with SOP followed by the department and the topic, separated by hyphens. Example: SOP - Operations - Flavour ingredient ordering. 3. Leave the email body empty. The automation reads the transcript and screenshots only — anything in the body is ignored. 4. Attach the transcript Word document and all action screenshots. Do not zip them — attach as individual files. 5. Send the email."
+        "title": "Refresh the sales report workbook",
+        "detail": "Open the sales report workbook. Open:  P:\\_Pamela\\!Sales, Samples & Reports\\1 - Sales Report Automation\\Sales Report.xlsm Select Data → Refresh All. Let the queries complete before moving on."
       },
       {
-        "title": "6.3 Watch for the Receipt Notification",
-        "detail": "Within a few minutes of sending, a notification will post in the DSS Automation channel on Teams confirming the submission was received and draft generation has started. Wait for the second notification before checking SharePoint."
+        "title": "Validate SKU updates",
+        "detail": "Inside the refreshed workbook, review the validation tabs: •\tSKUs for Update — confirm new or changed SKUs are recognised. •\tFLVRS Checker — confirm FLVRS line-item mapping is current. If either tab flags unresolved items, correct the source list before running the dashboard macros."
       },
       {
-        "title": "6.4 Review the Draft",
-        "detail": "1. When the second notification posts (draft ready), open the SharePoint link from the notification or navigate to Data Hub > 06 AI Workspace > Review SOP draft. 2. Open the .docx file. Read it through end to end, comparing against your original transcript and the actual process. 3. Make corrections directly in the Word document. Common edits: fixing inferred details (timelines, thresholds, role names), adding missing exceptions, tightening unclear language. 4. Verify the screenshots are placed at the correct steps and the captions accurately describe each one. 5. Save the file in place. Do not rename it — the automation tracks files by name."
+        "title": "Review supporting databases",
+        "detail": "If any of the supporting databases need to be updated this cycle, update them now. The dashboard macros pull from these files."
       },
       {
-        "title": "6.5 Approve and Publish",
-        "detail": "1. Once you are satisfied with the draft, move the file from 06 AI Workspace > Review SOP draft to 06 AI Workspace > Approved > SOP drafts. 2. The automation detects the move, converts the .docx to PDF, publishes the PDF to its final location, and posts a confirmation notification in the status channel. 3. After publication, the .docx remains in the Approved > SOP drafts folder as the source of truth for any future revisions."
+        "title": "Clean the FLVRS weekly sales report",
+        "detail": "Open the FLVRS weekly sales sheet. Review the transaction list and remove any retail transactions — wholesale-only data should reach the dashboard."
+      },
+      {
+        "title": "Update DSS dashboards",
+        "detail": "From the sales report workbook, run the DSS dashboard macros in order:"
       }
     ],
-    "notes": [
-      "The full cycle from submission to published PDF takes roughly 10 to 30 minutes of active work, plus automation processing time between steps.",
-      "Prerequisites: DSS email account with access to send to claude@digitalsmokesupplies.com; Membership in the DSS Automation channel on Microsoft Teams; Access to the Data Hub SharePoint site, specifically the 06 AI Workspace folder; An iPhone with iOS 18 or later for Voice Memos with auto-transcription.",
-      "Status notifications reference — 'SOP submission received': Email and attachments arrived; draft generation has started; next step is to wait for the next notification. 'SOP draft ready': Word draft is in the Review SOP draft folder; next step is to open the file in SharePoint and review. 'SOP published': Approved Word file has been converted to PDF and published; no action required — share the published PDF link as needed. 'SOP submission failed': The automation could not process the email (common causes: missing attachments, unreadable transcript format); next step is to resubmit with corrected attachments.",
-      "Folder reference — Submission: Email to claude@digitalsmokesupplies.com. Review: Data Hub > 06 AI Workspace > Review SOP draft. Approval: Data Hub > 06 AI Workspace > Approved > SOP drafts. Final published PDF: Data Hub > 04 Operation_SOPs.",
-      "Troubleshooting — No receipt notification within 10 minutes: Check email address and attachments; if still not posted contact the Operations Owner. Draft is missing key steps: Transcript was likely incomplete or audio was unclear; rerecord and resubmit or edit directly in SharePoint. Screenshots placed at wrong steps: Automation matches screenshots by filename; rename descriptively and resubmit or move manually in the Word draft. File cannot be moved out of Review SOP draft: Confirm edit permissions on 06 AI Workspace folder; contact Operations Owner if access needed. Published PDF does not appear after approval: Confirm the file was moved (not copied) to Approved > SOP drafts — automation only triggers on a move.",
-      "Non-Compliance: Skipping the review step and approving a draft without reading it produces documents that may contain inferred, inaccurate, or incomplete information. Submitting incomplete transcripts produces drafts that are missing critical steps and may mislead the next person who follows the SOP. Bypassing the approval folder — for example, manually publishing a draft to the final location — breaks the version control chain and leaves the source of truth in an undefined state.",
-      "Exceptions: Urgent SOPs that cannot wait for the full review cycle may be drafted directly in Word using the dss-sop-policy template, with Operations Owner sign-off recorded by email. The resulting file should still be placed in the Approved > SOP drafts folder so it is captured in the published location and follows the same versioning thereafter."
-    ]
+    "notes": []
   }
 ];
 

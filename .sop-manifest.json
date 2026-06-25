@@ -103,5 +103,15 @@
     "id": "auto-002-sop-drafting",
     "title": "SOP Drafting Workflow",
     "synced": "bootstrap"
+  },
+  "SOP-OPS-007": {
+    "id": "ops-007-stock-replenishment-process",
+    "title": "Stock replenishment process",
+    "synced": "auto"
+  },
+  "SOP-SALES-003": {
+    "id": "sales-003-update-sales-dashboards",
+    "title": "Update sales dashboards (DSS / FLVRS / ACT)",
+    "synced": "auto"
   }
 }
