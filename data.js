@@ -2091,51 +2091,60 @@ const sops = [
     "id": "ops-007-stock-replenishment-process",
     "deptId": "operations",
     "sopCode": "SOP-OPS-007",
-    "title": "Stock replenishment process",
-    "desc": "This procedure explains how to execute the complete Stock Replenishment process, from purchase extraction through ERPLY import.",
-    "status": "Active",
+    "title": "Stock Replenishment Process",
+    "desc": "Covers the complete weekly Stock Replenishment cycle — from running the purchase extraction script through entering quantities, generating purchase returns in the automation workbook, exporting, and importing into ERPLY. Ensures replenishment quantities are accurately entered, purchase returns are generated and validated correctly, and inventory orders are successfully recorded in ERPLY.",
+    "status": "Draft — Pending review",
     "version": "v1.0",
-    "effectiveDate": "June 2026",
+    "effectiveDate": "2026-06-01",
     "owner": "Operations Lead",
     "pdfPath": "./sops/SOP-OPS-007_stock-replenishment-process.pdf",
     "qrgPath": null,
     "purpose": "This procedure explains how to execute the complete Stock Replenishment process, from purchase extraction through ERPLY import. Following it ensures replenishment quantities are accurately entered, purchase returns are generated correctly, and inventory orders are successfully imported into ERPLY.",
     "scope": "This SOP applies to any DSS employee responsible for generating Stock Replenishment purchase returns. It covers the full weekly cycle from extracting purchasing data to verifying imported purchase returns inside ERPLY. Tasks performed outside the Stock Replenishment Automation workbook — such as supplier negotiation, freight booking, or receiving — are out of scope.",
     "definitions": [],
-    "roles": [],
-    "cadence": "Weekly",
+    "roles": [
+      {
+        "role": "Operations Team Member",
+        "responsibility": "Executes the full replenishment cycle: runs the extraction script, refreshes the automation workbook, opens the weekly file, enters replenishment quantities from paperwork, reviews Add-On products, validates province assignments, runs Extract and Generate macros, verifies purchase returns, runs Export and Delete macros, runs the ERPLY import script, and verifies the results in ERPLY."
+      },
+      {
+        "role": "Operations Manager",
+        "responsibility": "Owns this SOP. Approves all deviations — partial cycles, alternate extraction dates, or any other step-level exception. Reviews escalations for repeated non-compliance and records approved exceptions in the weekly cycle log."
+      }
+    ],
+    "cadence": "Weekly — run at the start of each replenishment cycle. The extraction date entered in Step 1 should be yesterday's date.",
     "steps": [
       {
         "title": "Run purchase extraction",
-        "detail": "Navigate to the Stock Replenishment Automation folder and run the extraction batch script. Folder:  P:\\DSS Tools\\5. Stock Replenishment System\\5.1 Stock Replenishment Automation Run:  RunPurchaseExtraction.bat When prompted, enter yesterday’s date as the extraction date. Allow the extraction process to complete before proceeding to Step 2. Expected result — the latest purchasing and inventory information has been extracted and is ready for use in the replenishment process."
+        "detail": "Navigate to the Stock Replenishment Automation folder and run the extraction batch script. Folder: P:\\DSS Tools\\5. Stock Replenishment System\\5.1 Stock Replenishment Automation. Run: RunPurchaseExtraction.bat. When prompted, enter yesterday's date as the extraction date. Allow the extraction process to complete before proceeding to Step 2. Expected result — the latest purchasing and inventory information has been extracted and is ready for use in the replenishment process."
       },
       {
         "title": "Open Stock Replenishment Automation",
-        "detail": "Open the automation workbook from the same folder. File:  Replenishment Automation.xlsm Once the workbook is open, select Data → Refresh All and allow every query to finish refreshing. Save the workbook when the refresh completes. Expected result — the automation workbook is updated with the latest extracted data and is ready for replenishment processing."
+        "detail": "Open the automation workbook from the same folder. File: P:\\DSS Tools\\5. Stock Replenishment System\\5.1 Stock Replenishment Automation\\Replenishment Automation.xlsm. Once the workbook is open, select Data → Refresh All and allow every query to finish refreshing. Save the workbook when the refresh completes. Expected result — the automation workbook is updated with the latest extracted data and is ready for replenishment processing."
       },
       {
         "title": "Open the weekly Stock Replenishment file",
-        "detail": "Navigate to the replenishment archive and open the file for the current cycle. Folder:  P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\ Open the weekly Stock Replenishment file inside that folder. Expected result — the weekly Stock Replenishment file is ready for quantity entry."
+        "detail": "Navigate to the replenishment archive and open the file for the current cycle. Folder: P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\. Open the weekly Stock Replenishment file inside that folder. Expected result — the weekly Stock Replenishment file is ready for quantity entry."
       },
       {
         "title": "Enter replenishment quantities",
-        "detail": "Using the Stock Replenishment papers, enter all required replenishment quantities into the weekly file. Review all entries carefully before proceeding. Verify that: •\tQuantities match the paperwork. •\tNo rows were skipped. •\tNo quantities were entered in the wrong location. Save the file after completing all entries. Expected result — the weekly Stock Replenishment file contains all replenishment quantities required for the current purchasing cycle."
+        "detail": "Using the Stock Replenishment papers, enter all required replenishment quantities into the weekly file. Review all entries carefully before proceeding. Verify: (1) Quantities match the paperwork exactly. (2) No rows were skipped. (3) No quantities were entered in the wrong location. Save the file after completing all entries. Expected result — the weekly Stock Replenishment file contains all replenishment quantities required for the current purchasing cycle."
       },
       {
         "title": "Review Add-On products",
-        "detail": "Review the Add-On products listed on the final page of the Stock Replenishment paperwork. These products are not always included automatically and must be reviewed separately. Locate each Add-On product within the weekly Stock Replenishment file. Enter the required quantities for all applicable Add-On products, then save the file. Expected result — all required Add-On products have been included in the replenishment process."
+        "detail": "Review the Add-On products listed on the final page of the Stock Replenishment paperwork. These products are not always included automatically and must be reviewed separately. Locate each Add-On product within the weekly Stock Replenishment file and enter the required quantities for all applicable Add-On products, then save the file. Expected result — all required Add-On products have been included in the replenishment process."
       },
       {
         "title": "Refresh and validate the weekly file",
-        "detail": "After all quantities and Add-On products have been entered, perform one final refresh by selecting Data → Refresh All. Allow every query to finish loading. Review the file and confirm: •\tReplenishment quantities were entered correctly. •\tAdd-On products were included. •\tNo unexpected errors appear. •\tAll calculations update successfully. Expected result — the weekly Stock Replenishment file is finalised and ready for processing."
+        "detail": "After all quantities and Add-On products have been entered, perform one final refresh by selecting Data → Refresh All. Allow every query to finish loading. Review the file and confirm: (1) Replenishment quantities were entered correctly. (2) Add-On products were included. (3) No unexpected errors appear. (4) All calculations update successfully. Expected result — the weekly Stock Replenishment file is finalised and ready for processing."
       },
       {
         "title": "Validate province assignments",
-        "detail": "Before generating purchase returns, verify that all province assignments are correct. Review every province-specific product and confirm it is assigned to the correct province. Pay special attention to ON, QC, AB, MB, NB, PEI, and NS. Expected result — all products are assigned to the correct province."
+        "detail": "Before generating purchase returns, verify that all province assignments are correct. Review every province-specific product and confirm it is assigned to the correct province. Pay special attention to ON, QC, AB, MB, NB, PEI, and NS. Do not continue until every province assignment has been validated — incorrect province assignments produce incorrect purchasing and inventory allocations that require a manual unwind on the ERPLY side. If a correction is needed, fix the assignment and refresh the Stock Replenishment file again before proceeding. Expected result — all products are assigned to the correct province."
       },
       {
         "title": "Run the Extract macro",
-        "detail": "Return to Replenishment Automation.xlsm and locate the Extract button. Click Extract. When prompted, browse to and select the weekly Stock Replenishment file completed in Steps 3–7. Wait for the extraction to finish. Expected result — all replenishment quantities are loaded into the Purchase Return Generator."
+        "detail": "Return to Replenishment Automation.xlsm and click the Extract button. When prompted, browse to and select the weekly Stock Replenishment file completed in Steps 3–7. Wait for the extraction to finish. Expected result — all replenishment quantities are loaded into the Purchase Return Generator."
       },
       {
         "title": "Run the Generate macro",
@@ -2143,11 +2152,11 @@ const sops = [
       },
       {
         "title": "Review generated purchase returns",
-        "detail": "Review the generated purchase returns carefully before exporting. Verify: •\tProduct quantities. •\tProduct costs. •\tSupplier assignments. •\tProvince assignments. •\tPurchase return totals. If any discrepancies are identified, correct them before proceeding. Expected result — all generated purchase returns are accurate and ready for export."
+        "detail": "Review the generated purchase returns carefully before exporting. Verify: (1) Product quantities. (2) Product costs. (3) Supplier assignments. (4) Province assignments. (5) Purchase return totals. If any discrepancies are identified, correct them before proceeding. Expected result — all generated purchase returns are accurate and ready for export."
       },
       {
         "title": "Compare totals",
-        "detail": "Review the Summary sheet totals and compare them against the Label-only totals generated by the automation. The totals should match. If differences exist, investigate and resolve them before continuing. Expected result — Summary totals and Label-only totals match."
+        "detail": "Review the Summary sheet totals and compare them against the Label-only totals generated by the automation. The totals should match exactly. If differences exist, investigate and resolve before continuing — shipping with mismatched totals produces inventory variance at receiving. Expected result — Summary totals and Label-only totals match."
       },
       {
         "title": "Run the Export macro",
@@ -2155,41 +2164,27 @@ const sops = [
       },
       {
         "title": "Run the Delete macro",
-        "detail": "After confirming the export completed successfully, run the Delete macro. This removes temporary processing data and prepares the workbook for the next replenishment cycle. Expected result — temporary processing data has been cleared successfully."
+        "detail": "After confirming the export completed successfully, run the Delete macro. This removes temporary processing data and prepares the workbook for the next replenishment cycle. Running the ERPLY import before this step contaminates the next cycle with stale data and can cause duplicate purchase returns. Expected result — temporary processing data has been cleared successfully."
       },
       {
         "title": "Import purchase returns into ERPLY",
-        "detail": "Navigate back to the Stock Replenishment Automation folder and run the import script. Run:  Erply_Import_PurchaseReturn.py Allow the script to complete. Monitor the console window during the import and review any warnings or errors before closing the script. Expected result — purchase returns are imported into ERPLY successfully."
+        "detail": "Navigate to the Stock Replenishment Automation folder and run the import script. Run: P:\\DSS Tools\\5. Stock Replenishment System\\5.1 Stock Replenishment Automation\\Erply_Import_PurchaseReturn.py. Allow the script to complete. Monitor the console window during the import and review any warnings or errors before closing the script. Closing without reading the console hides import errors and leaves missing purchase returns undetected until receiving. Expected result — purchase returns are imported into ERPLY successfully."
       },
       {
         "title": "Final verification",
-        "detail": "Log into ERPLY and verify that: •\tPurchase returns were created successfully. •\tQuantities match the generated files. •\tSuppliers are assigned correctly. •\tNo products are missing. •\tNo import errors occurred. Once verification is complete, the Stock Replenishment process is finished. Expected result — the replenishment cycle is closed and ready to repeat next week."
+        "detail": "Log into ERPLY and verify: (1) Purchase returns were created successfully. (2) Quantities match the generated files. (3) Suppliers are assigned correctly. (4) No products are missing. (5) No import errors occurred. Once verification is complete, the Stock Replenishment process is finished for this cycle. Expected result — the replenishment cycle is closed and ready to repeat next week."
       }
     ],
     "notes": [
-      "Before closing the cycle, confirm every item below.",
-      "Purchase extraction completed.",
-      "Stock Replenishment Automation refreshed.",
-      "Weekly replenishment file updated.",
-      "Replenishment quantities entered.",
-      "Add-On products reviewed.",
-      "Province mappings validated.",
-      "Purchase returns generated.",
-      "Totals verified.",
-      "Export completed.",
-      "Delete macro completed.",
-      "ERPLY import completed.",
-      "Purchase returns verified in ERPLY.",
-      "Skipping or rushing any step in this procedure produces measurable harm to the business. Specific consequences:",
-      "Skipping the province validation in Step 7 routes purchase returns to the wrong warehouse and forces a manual unwind on the ERPLY side, delaying the next week’s order.",
-      "Skipping the Summary vs. Label-only comparison in Step 11 ships incorrect quantities to suppliers and produces inventory variance at receiving.",
-      "Running the ERPLY import without first running the Delete macro in Step 13 contaminates the next cycle with stale data and can cause duplicate purchase returns.",
-      "Closing the script in Step 14 without reading the console window hides import errors and leaves missing purchase returns undetected until receiving.",
-      "Repeated non-compliance is escalated to the Operations Manager and the owning employee is required to re-run the affected cycle on personal time.",
-      "Deviations from this SOP require advance approval from the Operations Manager. The two recognised deviations are:",
-      "Running a partial cycle (e.g. urgent single-supplier replenishment) outside the weekly schedule. The Operations Manager approves in writing, and the cycle is still validated against Steps 7, 10, 11, and 15.",
-      "Using an older extraction date when the current day’s data is unavailable. The Operations Manager records the substitution in the cycle’s log entry before proceeding.",
-      "All exceptions are logged in the weekly cycle folder under P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\exceptions.txt with the date, approver, and reason."
+      "Non-compliance: Skipping or rushing any step in this procedure produces measurable harm to the business. Repeated non-compliance is escalated to the Operations Manager and the owning employee is required to re-run the affected cycle on personal time.",
+      "Skipping province validation (Step 7) routes purchase returns to the wrong warehouse and forces a manual unwind on the ERPLY side, delaying the next week's order.",
+      "Skipping the Summary vs. Label-only comparison (Step 11) ships incorrect quantities to suppliers and produces inventory variance at receiving.",
+      "Running the ERPLY import without first running the Delete macro (Step 13) contaminates the next cycle with stale data and can cause duplicate purchase returns.",
+      "Closing the import script (Step 14) without reading the console window hides import errors and leaves missing purchase returns undetected until receiving.",
+      "Exception: Deviations require advance approval from the Operations Manager. Recognised deviations: (1) Running a partial cycle (e.g. urgent single-supplier replenishment) outside the weekly schedule — the cycle is still validated against Steps 7, 10, 11, and 15. (2) Using an older extraction date when current data is unavailable — the Operations Manager records the substitution in the cycle log before proceeding. All exceptions are logged at P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\exceptions.txt with date, approver, and reason.",
+      "Troubleshooting — Province validation errors: Stop the process. Correct the province assignment on the weekly file. Refresh (Data → Refresh All). Regenerate purchase returns from Step 8.",
+      "Troubleshooting — Purchase return totals do not match: Review recently entered quantities for typos and misplaced rows. Verify Add-On products were entered correctly. Run Generate again. Recheck Summary vs. Label-only totals.",
+      "Troubleshooting — ERPLY import errors: Review the error message in the console window. Correct the affected records on the weekly file. Re-run the Export macro to regenerate the import file. Run the import script again and confirm a clean console."
     ]
   },
   {
@@ -2358,90 +2353,81 @@ const sops = [
     "id": "sales-003-update-sales-dashboards",
     "deptId": "sales",
     "sopCode": "SOP-SALES-003",
-    "title": "Update sales dashboards (DSS / FLVRS / ACT)",
-    "desc": "This procedure ensures every DSS sales reporting surface — DSS Sales, FLVRS Sales, ACT Dashboard, Missing Opportunities, Back In Stock, and the Power BI dashboard — is refreshed from the same source extract on a consistent cadence.",
+    "title": "Sales Dashboard Update — DSS, FLVRS, and ACT",
+    "desc": "Defines the weekly procedure for refreshing all DSS sales reporting surfaces in sequence — DSS Sales, FLVRS Sales, ACT Dashboard, Missing Opportunities, Back In Stock, and the Power BI dashboard — from a single source extract. Ensures all dashboards stay reconciled and the published Power BI report remains in sync with the underlying Excel automations.",
     "status": "Active",
     "version": "v1.0",
-    "effectiveDate": "June 2026",
+    "effectiveDate": "2026-06-01",
     "owner": "Sales Reporting Analyst",
     "pdfPath": "./sops/SOP-SALES-003_update-sales-dashboards.pdf",
     "qrgPath": "./sops/QRG-SALES-003_update-sales-dashboards.pdf",
     "purpose": "This procedure ensures every DSS sales reporting surface — DSS Sales, FLVRS Sales, ACT Dashboard, Missing Opportunities, Back In Stock, and the Power BI dashboard — is refreshed from the same source extract on a consistent cadence. Running the steps in order keeps the numbers across dashboards reconciled and the published Power BI report in sync with the underlying Excel automations.",
     "scope": "This SOP applies to any DSS employee responsible for maintaining sales reporting, business intelligence, or Power BI dashboards. Out of scope: designing new dashboard visuals, modifying the underlying Power BI semantic model, and creating new automation macros — those changes go through the BI lead before any refresh run.",
     "definitions": [],
-    "roles": [],
-    "cadence": "Weekly",
+    "roles": [
+      {
+        "role": "Sales Reporting Analyst",
+        "responsibility": "Owns and executes the full dashboard update cycle. Runs the sales extraction, refreshes the workbook, validates SKUs, cleans FLVRS data, runs all dashboard macros in order, updates Missing Opportunities and Back In Stock, and publishes the Power BI report. Records any exceptions in the Sales Reporting log."
+      }
+    ],
+    "cadence": "Weekly — run on a consistent schedule to keep all sales reporting surfaces reconciled. Every dashboard update must trace back to the same weekly extraction.",
     "steps": [
       {
         "title": "Run sales data extraction",
-        "detail": "Navigate to the sales report automation folder and launch the extraction batch file. Folder:  P:\\- DSS Tools\\3. Sales & Reporting\\3.1 Sales Report Automation Run:  Run_Sales_Reports_Data_Extraction.bat Wait for the batch window to complete before continuing. The downstream macros assume the extract has finished."
+        "detail": "Navigate to the sales report automation folder and launch the extraction batch file. Folder: P:\\- DSS Tools\\3. Sales & Reporting\\3.1 Sales Report Automation. Run: Run_Sales_Reports_Data_Extraction.bat. Wait for the batch window to complete before continuing — the downstream macros assume the extract has finished, and starting before it completes produces stale or partial data across all dashboards."
       },
       {
         "title": "Refresh the sales report workbook",
-        "detail": "Open the sales report workbook. Open:  P:\\_Pamela\\!Sales, Samples & Reports\\1 - Sales Report Automation\\Sales Report.xlsm Select Data → Refresh All. Let the queries complete before moving on."
+        "detail": "Open the sales report workbook. Open: P:\\_Pamela\\!Sales, Samples & Reports\\1 - Sales Report Automation\\Sales Report.xlsm. Select Data → Refresh All. Let the queries complete before moving on. Do not run any macros while queries are still loading."
       },
       {
         "title": "Validate SKU updates",
-        "detail": "Inside the refreshed workbook, review the validation tabs: •\tSKUs for Update — confirm new or changed SKUs are recognised. •\tFLVRS Checker — confirm FLVRS line-item mapping is current. If either tab flags unresolved items, correct the source list before running the dashboard macros."
+        "detail": "Inside the refreshed workbook, review the validation tabs: (1) SKUs for Update — confirm new or changed SKUs are recognised. (2) FLVRS Checker — confirm FLVRS line-item mapping is current. If either tab flags unresolved items, correct the source list before running the dashboard macros. Running macros with unresolved SKUs causes new products to land in the wrong category and roll up into incorrect totals."
       },
       {
         "title": "Review supporting databases",
-        "detail": "If any of the supporting databases need to be updated this cycle, update them now. The dashboard macros pull from these files."
+        "detail": "If any of the supporting databases need to be updated this cycle, update them now before running the macros. The dashboard macros pull directly from these files. Databases to check: Taxes file — P:\\_Pamela\\!Sales, Samples & Reports\\Sales Report Monday Template - April 28 2025 Update.xlsx. Cost file — P:\\!!Sales Dashboard\\Sales Reports\\2021\\Sales Margin - 28 June 2021_nov8.xlsx. Customer database — P:\\- Power Bi\\1 -Data Base\\Customer Data Base\\Customer Data Base DSS.xlsx. Product category file — P:\\- Power Bi\\1 -Data Base\\Products\\Product Category.csv."
       },
       {
         "title": "Clean the FLVRS weekly sales report",
-        "detail": "Open the FLVRS weekly sales sheet. Review the transaction list and remove any retail transactions — wholesale-only data should reach the dashboard."
+        "detail": "Open the FLVRS weekly sales sheet. Review the transaction list and remove any retail transactions — only wholesale data should reach the FLVRS dashboard. Retail transactions left in the sheet overstate wholesale margin and customer counts for the week."
       },
       {
         "title": "Update DSS dashboards",
-        "detail": "From the sales report workbook, run the DSS dashboard macros in order: 1.\tRun DSS – Update Sales Dashboard. 2.\tRun DSS – Update Orders Dashboard. Wait for each macro to finish before launching the next."
+        "detail": "From the sales report workbook, run the DSS dashboard macros in order: (1) Run DSS – Update Sales Dashboard. (2) Run DSS – Update Orders Dashboard. Wait for each macro to finish before launching the next. Running both simultaneously or out of order can produce inconsistent totals between the Sales and Orders dashboards."
       },
       {
         "title": "Update FLVRS dashboards",
-        "detail": "From the same workbook, run the FLVRS macros in order: 1.\tRun FLVRS – Update Sales Dashboard. 2.\tRun FLVRS – Update Orders Dashboard."
+        "detail": "From the same workbook, run the FLVRS macros in order: (1) Run FLVRS – Update Sales Dashboard. (2) Run FLVRS – Update Orders Dashboard. Wait for each macro to finish before launching the next."
       },
       {
         "title": "Update ACT dashboard",
-        "detail": "Run the ACT dashboard macro: 1.\tRun ACT – Update Data Dashboard."
+        "detail": "Run the ACT dashboard macro from the same workbook: (1) Run ACT – Update Data Dashboard. Wait for the macro to complete before moving to the next step."
       },
       {
         "title": "Review missing opportunities",
-        "detail": "Open the missing opportunities workbook. Open:  C:\\Users\\juan\\OneDrive - Vapeur Express\\Teams Reports\\Missing Opportunities\\Missing Opportunities.xlsm Review for new entries. If new entries exist, run: 1.\tRun Feed_BackOrders."
+        "detail": "Open the missing opportunities workbook. Open: C:\\Users\\juan\\OneDrive - Vapeur Express\\Teams Reports\\Missing Opportunities\\Missing Opportunities.xlsm. Review for new entries. If new entries exist, run: (1) Run Feed_BackOrders. This step keeps the Missing Opportunities tracker current so the sales team can follow up on back-order opportunities."
       },
       {
         "title": "Update back in stock tracking",
-        "detail": "Open the back in stock automation workbook. Open:  P:\\- DSS Tools\\3. Sales & Reporting\\3.9 Back to Stock\\Back to Stock Automation.xlsm 1.\tRefresh all data. 2.\tRun Append_BackInStock_Log."
+        "detail": "Open the back in stock automation workbook. Open: P:\\- DSS Tools\\3. Sales & Reporting\\3.9 Back to Stock\\Back to Stock Automation.xlsm. (1) Refresh all data. (2) Run Append_BackInStock_Log. This appends the current cycle's back-in-stock events to the log, enabling timely customer outreach under SOP-SALES-001."
       },
       {
         "title": "Refresh the Power BI dashboard",
-        "detail": "Open the Power BI dashboard file. Open:  P:\\- Power Bi\\2 - Dashboard\\Dashboard 2025.pbix Select Home → Refresh. Wait for every query to finish — partial refreshes publish broken reports."
+        "detail": "Open the Power BI dashboard file. Open: P:\\- Power Bi\\2 - Dashboard\\Dashboard 2025.pbix. Select Home → Refresh. Wait for every query to finish — partial refreshes publish broken reports. Do not publish until the full refresh is confirmed complete."
       },
       {
         "title": "Publish the Power BI dashboard",
-        "detail": "From the Home ribbon, select Publish. Choose the correct workspace and confirm. Overwrite the existing report when prompted. Confirm the success message before closing."
+        "detail": "From the Home ribbon, select Publish. Choose the correct workspace and confirm. Overwrite the existing report when prompted — click Replace on the confirmation dialog. Confirm the success message before closing Power BI Desktop. If the wrong workspace is selected, the published report will not reach the intended audience and the previous version remains live."
       }
     ],
     "notes": [
-      "Tick each item before closing the cycle. If any item is unchecked, the dashboards are not in sync.",
-      "Sales extraction completed.",
-      "Sales report refreshed.",
-      "SKU validation completed.",
-      "Supporting databases reviewed and updated where required.",
-      "FLVRS weekly sales report cleaned of retail transactions.",
-      "DSS dashboards updated (Sales and Orders).",
-      "FLVRS dashboards updated (Sales and Orders).",
-      "ACT dashboard updated.",
-      "Missing opportunities reviewed; Feed_BackOrders run if needed.",
-      "Back in stock log updated.",
-      "Power BI dashboard refreshed.",
-      "Power BI dashboard published and overwrite confirmed.",
-      "Skipping or reordering steps breaks reconciliation between dashboards. The most common failures and their consequences:",
+      "Non-compliance: Skipping or reordering steps breaks reconciliation between dashboards. Any failure requires a full re-run of the affected steps and a Teams note to the Sales Reporting Analyst within the same business day.",
       "Publishing the Power BI report without refreshing first — stakeholders see stale figures and trust in the dashboard erodes.",
       "Forgetting to remove FLVRS retail transactions — wholesale margin and customer counts are overstated for the week.",
       "Running dashboard macros before SKU validation — new or renamed SKUs land in the wrong category and roll up into the wrong totals.",
       "Choosing the wrong workspace at publish — the published report does not reach the audience and the previous version remains live.",
-      "Any of the above requires a full re-run of the affected steps and a Teams note to the Sales Reporting Analyst within the same business day.",
-      "Skipping any step requires written approval from the BI lead before the run. Acceptable grounds for deviation: a source file is locked or unavailable, a macro has a known bug under active fix, or a partial publish is requested for a single audience. Record every exception in the Sales Reporting log with date, reason, approver, and the step that was skipped or modified."
+      "Exception: Skipping any step requires written approval from the BI lead before the run. Acceptable grounds: a source file is locked or unavailable, a macro has a known bug under active fix, or a partial publish is requested for a single audience. All exceptions must be recorded in the Sales Reporting log with date, reason, approver, and the step skipped or modified."
     ]
   }
 ];
