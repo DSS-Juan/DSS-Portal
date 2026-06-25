@@ -2166,7 +2166,31 @@ const sops = [
         "detail": "Log into ERPLY and verify that: •\tPurchase returns were created successfully. •\tQuantities match the generated files. •\tSuppliers are assigned correctly. •\tNo products are missing. •\tNo import errors occurred. Once verification is complete, the Stock Replenishment process is finished. Expected result — the replenishment cycle is closed and ready to repeat next week."
       }
     ],
-    "notes": []
+    "notes": [
+      "Before closing the cycle, confirm every item below.",
+      "Purchase extraction completed.",
+      "Stock Replenishment Automation refreshed.",
+      "Weekly replenishment file updated.",
+      "Replenishment quantities entered.",
+      "Add-On products reviewed.",
+      "Province mappings validated.",
+      "Purchase returns generated.",
+      "Totals verified.",
+      "Export completed.",
+      "Delete macro completed.",
+      "ERPLY import completed.",
+      "Purchase returns verified in ERPLY.",
+      "Skipping or rushing any step in this procedure produces measurable harm to the business. Specific consequences:",
+      "Skipping the province validation in Step 7 routes purchase returns to the wrong warehouse and forces a manual unwind on the ERPLY side, delaying the next week’s order.",
+      "Skipping the Summary vs. Label-only comparison in Step 11 ships incorrect quantities to suppliers and produces inventory variance at receiving.",
+      "Running the ERPLY import without first running the Delete macro in Step 13 contaminates the next cycle with stale data and can cause duplicate purchase returns.",
+      "Closing the script in Step 14 without reading the console window hides import errors and leaves missing purchase returns undetected until receiving.",
+      "Repeated non-compliance is escalated to the Operations Manager and the owning employee is required to re-run the affected cycle on personal time.",
+      "Deviations from this SOP require advance approval from the Operations Manager. The two recognised deviations are:",
+      "Running a partial cycle (e.g. urgent single-supplier replenishment) outside the weekly schedule. The Operations Manager approves in writing, and the cycle is still validated against Steps 7, 10, 11, and 15.",
+      "Using an older extraction date when the current day’s data is unavailable. The Operations Manager records the substitution in the cycle’s log entry before proceeding.",
+      "All exceptions are logged in the weekly cycle folder under P:\\_Pamela\\Replenishment\\2026\\<Year>\\<Month>\\<Week>\\exceptions.txt with the date, approver, and reason."
+    ]
   },
   {
     "id": "sales-001-missing-opportunities",
@@ -2370,10 +2394,55 @@ const sops = [
       },
       {
         "title": "Update DSS dashboards",
-        "detail": "From the sales report workbook, run the DSS dashboard macros in order:"
+        "detail": "From the sales report workbook, run the DSS dashboard macros in order: 1.\tRun DSS – Update Sales Dashboard. 2.\tRun DSS – Update Orders Dashboard. Wait for each macro to finish before launching the next."
+      },
+      {
+        "title": "Update FLVRS dashboards",
+        "detail": "From the same workbook, run the FLVRS macros in order: 1.\tRun FLVRS – Update Sales Dashboard. 2.\tRun FLVRS – Update Orders Dashboard."
+      },
+      {
+        "title": "Update ACT dashboard",
+        "detail": "Run the ACT dashboard macro: 1.\tRun ACT – Update Data Dashboard."
+      },
+      {
+        "title": "Review missing opportunities",
+        "detail": "Open the missing opportunities workbook. Open:  C:\\Users\\juan\\OneDrive - Vapeur Express\\Teams Reports\\Missing Opportunities\\Missing Opportunities.xlsm Review for new entries. If new entries exist, run: 1.\tRun Feed_BackOrders."
+      },
+      {
+        "title": "Update back in stock tracking",
+        "detail": "Open the back in stock automation workbook. Open:  P:\\- DSS Tools\\3. Sales & Reporting\\3.9 Back to Stock\\Back to Stock Automation.xlsm 1.\tRefresh all data. 2.\tRun Append_BackInStock_Log."
+      },
+      {
+        "title": "Refresh the Power BI dashboard",
+        "detail": "Open the Power BI dashboard file. Open:  P:\\- Power Bi\\2 - Dashboard\\Dashboard 2025.pbix Select Home → Refresh. Wait for every query to finish — partial refreshes publish broken reports."
+      },
+      {
+        "title": "Publish the Power BI dashboard",
+        "detail": "From the Home ribbon, select Publish. Choose the correct workspace and confirm. Overwrite the existing report when prompted. Confirm the success message before closing."
       }
     ],
-    "notes": []
+    "notes": [
+      "Tick each item before closing the cycle. If any item is unchecked, the dashboards are not in sync.",
+      "Sales extraction completed.",
+      "Sales report refreshed.",
+      "SKU validation completed.",
+      "Supporting databases reviewed and updated where required.",
+      "FLVRS weekly sales report cleaned of retail transactions.",
+      "DSS dashboards updated (Sales and Orders).",
+      "FLVRS dashboards updated (Sales and Orders).",
+      "ACT dashboard updated.",
+      "Missing opportunities reviewed; Feed_BackOrders run if needed.",
+      "Back in stock log updated.",
+      "Power BI dashboard refreshed.",
+      "Power BI dashboard published and overwrite confirmed.",
+      "Skipping or reordering steps breaks reconciliation between dashboards. The most common failures and their consequences:",
+      "Publishing the Power BI report without refreshing first — stakeholders see stale figures and trust in the dashboard erodes.",
+      "Forgetting to remove FLVRS retail transactions — wholesale margin and customer counts are overstated for the week.",
+      "Running dashboard macros before SKU validation — new or renamed SKUs land in the wrong category and roll up into the wrong totals.",
+      "Choosing the wrong workspace at publish — the published report does not reach the audience and the previous version remains live.",
+      "Any of the above requires a full re-run of the affected steps and a Teams note to the Sales Reporting Analyst within the same business day.",
+      "Skipping any step requires written approval from the BI lead before the run. Acceptable grounds for deviation: a source file is locked or unavailable, a macro has a known bug under active fix, or a partial publish is requested for a single audience. Record every exception in the Sales Reporting log with date, reason, approver, and the step that was skipped or modified."
+    ]
   }
 ];
 
